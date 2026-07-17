@@ -149,7 +149,7 @@ async function initierPaiement({ transactionId, montant, description, client = {
     transaction_type: 'PAYMENT',
     owner_charge: cfg().ownerCharge || 'CUSTOMER',
     owner_charge_operator: cfg().ownerChargeOperator || 'CUSTOMER',
-    free_info: (description || "Commande L'Hair Afro").slice(0, 120),
+    free_info: (description || 'Commande').slice(0, 15), // PVit : max 15 caractères
     product: cfg().product || 'BOUTIQUE',
     operator_code: operateur || undefined,
     reference: refPvit,
