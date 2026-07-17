@@ -50,16 +50,18 @@ encore inactif tant que les variables PVit ne sont pas complètes).
 
 ## Étape 3 — Les 2 URLs PVit (dashboard MyPVit → Paramétrages → Urls)
 
-Se connecter à `mypvit.pro` (compte `contact@lhairafro.com` / mot de passe de Landry),
-compte **L'Hair Afro**, puis créer **deux URLs** pointant vers le domaine en ligne :
+✅ **FAIT (mode TEST)** — les deux URLs ont été créées dans le dashboard L'Hair Afro,
+pointant vers le domaine en ligne, et leurs codes sont déjà reportés dans le projet
+(`.env.example` + `src/config.js`) :
 
-| Type | URL à saisir | Sert à |
-|---|---|---|
-| **CALLBACK** | `https://lhairafro.com/api/pvit-callback` | Webhook (statut définitif) |
-| **Réception de clé secrète** | `https://lhairafro.com/api/pvit-secret` | Recevoir la clé après renew-secret |
+| Type | URL saisie | Code généré | Variable |
+|---|---|---|---|
+| **CALLBACK** | `https://lhairafro.com/api/pvit-callback` | **MKTAO** | `PVIT_CALLBACK_URL_CODE` |
+| **Réception de clé secrète** | `https://lhairafro.com/api/pvit-secret` | **7UMSP** | `PVIT_RECEPTION_URL_CODE` (= `receptionUrlCode`) |
 
-PVit génère un **code** pour chaque URL → ce sont `PVIT_CALLBACK_URL_CODE` et
-`PVIT_RECEPTION_URL_CODE`.
+> En **production**, si PVit fournit un nouveau contexte (nouveau slug / compte
+> d'opération PROD), recréer ces 2 URLs et remplacer les codes ci-dessus par les
+> nouveaux dans les variables Render.
 
 Relever aussi, page **Paramétrages → APIs**, le code de l'endpoint **CHECK STATUS**
 (non encore noté) → `PVIT_URL_STATUS` (ex. `/XXXXXXXX/status`).
@@ -80,10 +82,15 @@ Renseigner (les non-secrètes sont déjà dans `render.yaml`) :
 
 ```
 PVIT_API_PASSWORD       = (le mot de passe API défini à l'étape 4)   ← SECRET
-PVIT_CALLBACK_URL_CODE  = (code de l'URL callback, étape 3)
-PVIT_RECEPTION_URL_CODE = (code de l'URL réception de clé, étape 3)
-PVIT_URL_STATUS         = (code endpoint CHECK STATUS, étape 3)
+PVIT_CALLBACK_URL_CODE  = MKTAO   (URL callback, créée à l'étape 3)
+PVIT_RECEPTION_URL_CODE = 7UMSP   (URL réception de clé, créée à l'étape 3)
+PVIT_URL_STATUS         = (code endpoint CHECK STATUS, à relever page APIs)
 ```
+
+> Les codes `MKTAO` / `7UMSP` sont déjà les défauts du code (`src/config.js`) : en
+> mode TEST sur le même domaine, seul `PVIT_API_PASSWORD` (et éventuellement
+> `PVIT_URL_STATUS`) reste indispensable à poser. Les remettre explicitement sur
+> Render reste recommandé pour la lisibilité.
 
 (déjà posées via le blueprint : `PVIT_SLUG`, `PVIT_OPERATION_ACCOUNT`, `PVIT_URL_RENEW`,
 `PVIT_URL_REST`, `BOUTIQUE_WHATSAPP`, `DATABASE_PATH`, `NODE_ENV`.)

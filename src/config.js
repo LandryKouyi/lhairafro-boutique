@@ -59,10 +59,13 @@ const config = {
     // à copier depuis la page APIs (Paramétrages → APIs). Vide = check status
     // désactivé (la confirmation passe alors par le webhook).
     urlStatus: process.env.PVIT_URL_STATUS || '',
-    // Codes d'URL à créer dans PVit (Paramétrages → Urls) pointant vers le
-    // domaine déployé : callback -> /api/pvit-callback, réception clé -> /api/pvit-secret.
-    callbackUrlCode: process.env.PVIT_CALLBACK_URL_CODE || '',
-    receptionUrlCode: process.env.PVIT_RECEPTION_URL_CODE || '',
+    // Codes d'URL créés dans PVit (Paramétrages → Urls), pointant vers le domaine
+    // déployé : callback -> https://lhairafro.com/api/pvit-callback (code MKTAO),
+    // réception de clé -> https://lhairafro.com/api/pvit-secret (code 7UMSP).
+    // Valeurs par défaut = codes du mode TEST L'Hair Afro (surchargées par .env
+    // en production si les URLs sont recréées).
+    callbackUrlCode: process.env.PVIT_CALLBACK_URL_CODE || 'MKTAO',
+    receptionUrlCode: process.env.PVIT_RECEPTION_URL_CODE || '7UMSP',
     // Métadonnées facultatives.
     agent: process.env.PVIT_AGENT || 'LHAIR-AFRO',
     product: process.env.PVIT_PRODUCT || 'BOUTIQUE',
