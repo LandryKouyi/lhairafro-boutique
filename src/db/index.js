@@ -72,8 +72,8 @@ if (nbProduits === 0) {
     ['Soins',       'Masque hydratant intense',    'Cheveux crépus & défrisés — hydratation en profondeur.',             6500, '🌸', '#f7dfe4'],
     ['Soins',       'Shampoing doux sans sulfate', 'Nettoie en douceur, respecte le cuir chevelu.',                      4500, '🧼', '#e4f7df'],
     ['Coiffage',    'Leave-in définition boucles', 'Sans rinçage, discipline et fait briller.',                          5500, '✨', '#f7f0d9'],
-    ['Accessoires', 'Peigne afro & pince',         'Kit coiffage démêlant, tout doux pour vos longueurs.',               2000, '🪮', '#dff2f7'],
-    ['Accessoires', 'Bonnet satin de nuit',        'Protège vos cheveux et préserve vos coiffures.',                     3000, '🎀', '#f7d9ec'],
+    ['Accessoires', 'Peigne afro & pince',         'Kit coiffage démêlant, tout doux pour vos longueurs.',                500, '🪮', '#dff2f7'],
+    ['Accessoires', 'Bonnet satin de nuit',        'Protège vos cheveux et préserve vos coiffures.',                      900, '🎀', '#f7d9ec'],
     ['Soins',       'Sérum pousse ricin & menthe', 'Active la circulation et booste la longueur.',                       6000, '🌿', '#def7e6'],
     ['Coffret',     'Coffret découverte routine',  '5 essentiels pour une routine afro complète.',                      15000, '🎁', '#efe0f7'],
   ];
