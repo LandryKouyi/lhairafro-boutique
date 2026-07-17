@@ -40,6 +40,15 @@ ses commandes, sans passer par nous.
 - Nom de la boutique, slogan, numéro WhatsApp — appliqués **aussitôt** à la
   boutique en ligne. (Laisser un champ vide = on retombe sur la valeur par défaut
   du serveur.)
+- **Mon mot de passe** : Ludmilla définit / change **son propre** mot de passe
+  (que Landry ne connaît pas). À chaque changement, un **code de récupération**
+  s'affiche **une seule fois** — à noter et garder en lieu sûr.
+
+### Écran de connexion — « Mot de passe oublié ? »
+Si Ludmilla oublie son mot de passe, elle clique « Mot de passe oublié ? », saisit
+son **code de récupération** + un nouveau mot de passe, et se reconnecte
+**seule**, sans Landry. Un nouveau code de récupération lui est alors donné (l'ancien
+est consommé).
 
 ---
 
@@ -77,20 +86,36 @@ rester sans module natif) :
 
 ---
 
-## 3) Mot de passe admin — À POSER PAR LANDRY (secret)
+## 3) Mots de passe — autonomie de Ludmilla (3 niveaux)
 
-Le mot de passe n'est **jamais** écrit dans le code. Tant qu'il est absent,
-l'espace `/admin` est **verrouillé** (aucune connexion possible).
+Objectif : que Ludmilla soit **autonome** et sécurise son activité avec un mot de
+passe **qu'elle seule connaît**, tout en gardant une porte de secours si elle
+l'oublie. Trois niveaux :
 
+1. **Son mot de passe personnel** — elle le définit dans Réglages ; Landry ne le
+   connaît pas. C'est sa clé du quotidien. Stocké **haché** (scrypt), jamais en clair.
+2. **Son code de récupération** — généré et affiché une seule fois à chaque
+   changement de mot de passe. C'est **son** filet : oublié son mot de passe →
+   « Mot de passe oublié ? » sur `/admin`, elle saisit ce code + un nouveau mot de
+   passe, et se déverrouille **seule**. Stocké haché, elle seule le détient.
+3. **Le mot de passe maître `ADMIN_PASSWORD`** (Landry) — « bris de glace »
+   ultime, utilisé seulement si elle perd à la fois son mot de passe ET son code.
+   C'est un recours d'urgence incontournable (l'hébergeur peut toujours réinitialiser),
+   pas la clé du quotidien. C'est aussi la **racine de signature** des sessions,
+   donc il doit rester posé en permanence.
+
+### À POSER PAR LANDRY (secret)
 Sur Render → service `lhairafro-boutique` → **Environment → Add Environment
 Variable** :
-
 - Key : `ADMIN_PASSWORD`
-- Value : *(le mot de passe choisi pour Ludmilla)*
+- Value : *(un mot de passe robuste ; il sert de 1re connexion pour Ludmilla ET de
+  clé de secours)*
 
-Puis **Save, rebuild**. Communiquer ce mot de passe à Ludmilla (elle le tape sur
-`lhairafro.com/admin`). Pour le changer plus tard : modifier la variable et
-redéployer — les sessions ouvertes sont alors invalidées automatiquement.
+Puis **Save, rebuild**. Donner ce mot de passe à Ludmilla pour sa **première**
+connexion sur `lhairafro.com/admin`, en lui demandant d'aller aussitôt dans
+**Réglages → Mon mot de passe** pour définir le sien (et **noter le code de
+récupération** affiché). À partir de là, Landry n'a plus besoin de connaître son
+mot de passe.
 
 Variables optionnelles : `ADMIN_SESSION_SECRET` (sel de signature),
 `ADMIN_SESSION_HEURES` (durée d'une session, défaut 12 h).
@@ -101,9 +126,14 @@ Variables optionnelles : `ADMIN_SESSION_SECRET` (sel de signature),
 
 - **Auth** : jeton signé HMAC-SHA256 (`node:crypto`, aucun module natif),
   stocké côté navigateur (localStorage), envoyé en `Authorization: Bearer`.
-  Clé de signature dérivée de `ADMIN_PASSWORD`. Fichier : `src/services/auth.js`.
-- **Routes** (toutes sous `/api/admin/*`, protégées sauf `/login`) :
-  `POST /login`, `GET /session`, `GET|POST /produits`,
+  Clé de signature dérivée du mot de passe **maître** `ADMIN_PASSWORD` (racine
+  stable : changer le mot de passe *perso* n'invalide pas les sessions). Mots de
+  passe perso + code de récupération **hachés en scrypt** dans la table
+  `admin_auth` (ligne unique). Fichier : `src/services/auth.js`.
+- **Routes** (toutes sous `/api/admin/*`, protégées sauf `/login` et
+  `/reinitialiser` qui sont publics) :
+  `POST /login`, `POST /reinitialiser` (reset par code de récupération),
+  `GET /session`, `POST /changer-motdepasse`, `GET|POST /produits`,
   `PUT|DELETE /produits/:id`, `PATCH /produits/:id/actif`,
   `POST|DELETE /produits/:id/image`, `GET /commandes`,
   `GET /commandes/:reference`, `PATCH /commandes/:reference/livree`,

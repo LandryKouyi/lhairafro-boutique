@@ -12,9 +12,12 @@
 
 const crypto = require('crypto');
 const config = require('../config');
+const db = require('../db');
 
-// Clé de signature : dérivée du mot de passe admin. Si le mot de passe n'est pas
-// posé, la clé est vide et estActive() = false -> aucune connexion possible.
+// Clé de signature : dérivée du mot de passe MAÎTRE (ADMIN_PASSWORD, racine
+// stable côté serveur). Elle ne change pas quand Ludmilla change SON mot de
+// passe, donc ses sessions restent valides. Si ADMIN_PASSWORD n'est pas posé,
+// la clé est vide et estActive() = false -> aucune connexion possible.
 function cleSignature() {
   const mdp = config.admin.password || '';
   if (!mdp) return null;
@@ -24,19 +27,87 @@ function cleSignature() {
     .digest();
 }
 
-// L'espace admin est-il activable ? (mot de passe posé)
+// L'espace admin est-il activable ? (mot de passe maître posé par Landry)
 function estActive() {
   return Boolean(config.admin.password);
 }
 
-// Comparaison à temps constant du mot de passe saisi.
-function motDePasseValide(saisi) {
+// --- Hachage scrypt (node:crypto, aucun module natif) ----------------------
+// Format stocké : scrypt$<selHex>$<hashHex>
+function hacher(secret) {
+  const sel = crypto.randomBytes(16);
+  const dk = crypto.scryptSync(String(secret), sel, 64);
+  return `scrypt$${sel.toString('hex')}$${dk.toString('hex')}`;
+}
+function verifierHash(secret, stocke) {
+  if (!stocke) return false;
+  const [algo, selHex, hashHex] = String(stocke).split('$');
+  if (algo !== 'scrypt' || !selHex || !hashHex) return false;
+  const dk = crypto.scryptSync(String(secret), Buffer.from(selHex, 'hex'), 64);
+  const a = Buffer.from(hashHex, 'hex');
+  return a.length === dk.length && crypto.timingSafeEqual(a, dk);
+}
+
+function ligneAuth() {
+  try { return db.prepare('SELECT * FROM admin_auth WHERE id = 1').get(); }
+  catch { return null; }
+}
+
+// Ludmilla a-t-elle déjà défini son propre mot de passe ?
+function motDePassePersoDefini() {
+  const r = ligneAuth();
+  return Boolean(r && r.password_hash);
+}
+
+// Comparaison à temps constant avec le mot de passe MAÎTRE (bris de glace Landry).
+function motDePasseMaitreValide(saisi) {
   const attendu = config.admin.password || '';
   if (!attendu) return false;
   const a = Buffer.from(String(saisi || ''));
   const b = Buffer.from(attendu);
   if (a.length !== b.length) return false;
   return crypto.timingSafeEqual(a, b);
+}
+
+// Connexion : accepte le mot de passe PERSO de Ludmilla (prioritaire) OU le mot
+// de passe maître de Landry (recours ultime, toujours accepté tant qu'il est posé).
+function motDePasseValide(saisi) {
+  const r = ligneAuth();
+  if (r && r.password_hash && verifierHash(saisi, r.password_hash)) return true;
+  return motDePasseMaitreValide(saisi);
+}
+
+// --- Code de récupération (le filet de Ludmilla, elle seule le détient) -----
+// 12 caractères non ambigus (sans I,O,0,1), affichés en 3 groupes : XXXX-XXXX-XXXX.
+function genererCode() {
+  const alpha = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let s = '';
+  for (let i = 0; i < 12; i++) {
+    if (i > 0 && i % 4 === 0) s += '-';
+    s += alpha[crypto.randomInt(alpha.length)];
+  }
+  return s;
+}
+const normCode = (c) => String(c || '').replace(/[^A-Za-z0-9]/g, '').toUpperCase();
+
+// Définit le mot de passe perso de Ludmilla ET (re)génère son code de
+// récupération. Renvoie le code EN CLAIR une seule fois (à afficher/copier).
+function definirMotDePasse(nouveau) {
+  const code = genererCode();
+  const ph = hacher(String(nouveau));
+  const rh = hacher(normCode(code));
+  db.prepare(`INSERT INTO admin_auth (id, password_hash, recovery_hash, maj_le)
+    VALUES (1, ?, ?, datetime('now'))
+    ON CONFLICT(id) DO UPDATE SET password_hash = excluded.password_hash,
+      recovery_hash = excluded.recovery_hash, maj_le = excluded.maj_le`).run(ph, rh);
+  return code;
+}
+
+// Vérifie un code de récupération saisi.
+function codeRecuperationValide(code) {
+  const r = ligneAuth();
+  if (!r || !r.recovery_hash) return false;
+  return verifierHash(normCode(code), r.recovery_hash);
 }
 
 const b64url = (buf) => buf.toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
@@ -83,4 +154,8 @@ function protege(req, res, next) {
   next();
 }
 
-module.exports = { estActive, motDePasseValide, creerJeton, jetonValide, protege };
+module.exports = {
+  estActive, motDePasseValide, motDePasseMaitreValide, motDePassePersoDefini,
+  creerJeton, jetonValide, protege,
+  definirMotDePasse, codeRecuperationValide,
+};

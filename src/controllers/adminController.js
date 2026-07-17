@@ -24,7 +24,42 @@ function login(req, res) {
 
 // GET /api/admin/session — vérifie qu'un jeton est encore valide (appelée au chargement).
 function session(req, res) {
-  res.json({ ok: true });
+  res.json({ ok: true, motDePassePerso: auth.motDePassePersoDefini() });
+}
+
+// POST /api/admin/changer-motdepasse  { actuel, nouveau } — Ludmilla définit / change
+// SON mot de passe (que Landry ne connaît pas). Renvoie un NOUVEAU code de
+// récupération à conserver (affiché une seule fois).
+function changerMotDePasse(req, res) {
+  const actuel = (req.body && (req.body.actuel || req.body.actuelMotDePasse)) || '';
+  const nouveau = (req.body && (req.body.nouveau || req.body.nouveauMotDePasse)) || '';
+  if (!auth.motDePasseValide(actuel)) {
+    const e = new Error('Mot de passe actuel incorrect.'); e.status = 401; e.expose = true; throw e;
+  }
+  if (String(nouveau).length < 6) {
+    const e = new Error('Le nouveau mot de passe doit contenir au moins 6 caractères.'); e.status = 400; e.expose = true; throw e;
+  }
+  const code = auth.definirMotDePasse(String(nouveau));
+  res.json({ ok: true, codeRecuperation: code });
+}
+
+// POST /api/admin/reinitialiser  { code, nouveau } — PUBLIC (écran de connexion).
+// Ludmilla se déverrouille SEULE avec son code de récupération, sans Landry.
+// Renvoie un jeton (connexion immédiate) + un nouveau code de récupération.
+function reinitialiser(req, res) {
+  if (!auth.estActive()) {
+    return res.status(503).json({ erreur: "L'espace de gestion n'est pas encore activé sur le serveur." });
+  }
+  const code = (req.body && req.body.code) || '';
+  const nouveau = (req.body && (req.body.nouveau || req.body.nouveauMotDePasse)) || '';
+  if (!auth.codeRecuperationValide(code)) {
+    return res.status(401).json({ erreur: 'Code de récupération invalide. Vérifiez la saisie ou contactez le support.' });
+  }
+  if (String(nouveau).length < 6) {
+    return res.status(400).json({ erreur: 'Le nouveau mot de passe doit contenir au moins 6 caractères.' });
+  }
+  const nouveauCode = auth.definirMotDePasse(String(nouveau));
+  res.json({ ok: true, jeton: auth.creerJeton(), codeRecuperation: nouveauCode });
 }
 
 // ---- Produits (CRUD complet) ----------------------------------------------
@@ -211,7 +246,7 @@ function ecrireReglages(req, res) {
 }
 
 module.exports = {
-  login, session,
+  login, session, changerMotDePasse, reinitialiser,
   listeProduits, creerProduit, modifierProduit, basculerActif, supprimerProduit,
   televerserImage, retirerImage,
   listeCommandes, detailCommande, marquerLivree,

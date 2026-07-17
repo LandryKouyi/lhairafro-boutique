@@ -41,6 +41,23 @@
  .btn-danger{background:rgba(229,72,77,.1);color:var(--danger)}
  .msg{font-size:.86rem;padding:10px 12px;border-radius:10px;margin-top:14px}
  .msg-err{background:rgba(229,72,77,.1);color:var(--danger)}
+ .linklike{background:none;border:none;color:var(--accent);font-weight:700;font-size:.88rem;cursor:pointer;padding:0}
+ .linklike:hover{text-decoration:underline}
+
+ /* boîte code de récupération */
+ .modal{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;padding:22px;background:rgba(16,24,31,.55);opacity:0;pointer-events:none;transition:.2s;z-index:80}
+ .modal.open{opacity:1;pointer-events:auto}
+ .mcard{background:#fff;border-radius:20px;box-shadow:var(--shadow);width:min(420px,100%);padding:28px 26px;text-align:center}
+ .mcard .em{font-size:2.4rem}
+ .mcard h3{margin:8px 0 6px;font-size:1.2rem}
+ .mcard p{color:var(--muted);font-size:.9rem}
+ .code{font-family:ui-monospace,"SFMono-Regular",Menlo,Consolas,monospace;font-size:1.5rem;font-weight:800;letter-spacing:.14em;
+   background:linear-gradient(135deg,rgba(214,51,132,.08),rgba(142,45,226,.08));border:1.5px dashed var(--accent);
+   border-radius:14px;padding:16px;margin:16px 0;color:var(--ink);word-break:break-all}
+ .warnbox{background:rgba(200,146,42,.12);color:#8a610f;border-radius:12px;padding:11px 13px;font-size:.82rem;font-weight:600;text-align:left}
+ .seccard{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px;margin-top:6px}
+ .seccard h3{font-size:1.02rem;margin-bottom:4px}
+ .seccard .hint{color:var(--muted);font-size:.85rem;margin-bottom:14px}
 
  /* ---- App shell ---- */
  .top{position:sticky;top:0;z-index:30;background:rgba(255,255,255,.94);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
@@ -139,6 +156,7 @@
 
 <!-- ============ CONNEXION ============ -->
 <div class="login" id="loginView">
+  <!-- Connexion -->
   <form class="lcard" id="loginForm" onsubmit="return doLogin(event)">
     <div class="lbrand"><b>L'Hair</b> <em>Afro</em></div>
     <div class="ltag"><span class="dot"></span>Espace de gestion · réservé à la gérante</div>
@@ -148,6 +166,28 @@
     </div>
     <button class="btn btn-primary btn-block" id="loginBtn" type="submit">Se connecter</button>
     <div class="msg msg-err hidden" id="loginErr"></div>
+    <div style="text-align:center;margin-top:16px">
+      <button type="button" class="linklike" onclick="showReset(true)">Mot de passe oublié ?</button>
+    </div>
+  </form>
+
+  <!-- Réinitialisation par code de récupération -->
+  <form class="lcard hidden" id="resetForm" onsubmit="return doReset(event)">
+    <div class="lbrand"><b>Récupérer</b> <em>l'accès</em></div>
+    <div class="ltag"><span class="dot"></span>Saisissez votre code de récupération</div>
+    <div class="field">
+      <label for="rcode">Code de récupération</label>
+      <input class="inp" id="rcode" placeholder="XXXX-XXXX-XXXX" style="letter-spacing:.12em;text-transform:uppercase" autocomplete="off">
+    </div>
+    <div class="field">
+      <label for="rnew">Nouveau mot de passe</label>
+      <input class="inp" type="password" id="rnew" placeholder="Au moins 6 caractères" autocomplete="new-password">
+    </div>
+    <button class="btn btn-primary btn-block" id="resetBtn" type="submit">Réinitialiser et se connecter</button>
+    <div class="msg msg-err hidden" id="resetErr"></div>
+    <div style="text-align:center;margin-top:16px">
+      <button type="button" class="linklike" onclick="showReset(false)">← Retour à la connexion</button>
+    </div>
   </form>
 </div>
 
@@ -195,8 +235,32 @@
       <div class="field"><label>Slogan</label><input class="inp" id="r_slogan"></div>
       <div class="field"><label>Numéro WhatsApp (format international, ex. 24174598750)</label><input class="inp" id="r_whatsapp" inputmode="numeric"></div>
       <button class="btn btn-primary" id="rbtn" onclick="saveReglages()">Enregistrer</button>
+
+      <div class="seccard" style="margin-top:28px">
+        <h3>🔒 Mon mot de passe</h3>
+        <div class="hint" id="secHint">Définissez un mot de passe que vous seule connaissez.</div>
+        <div class="field"><label>Mot de passe actuel</label><input class="inp" type="password" id="s_actuel" autocomplete="current-password" placeholder="Votre mot de passe actuel"></div>
+        <div class="two">
+          <div class="field"><label>Nouveau mot de passe</label><input class="inp" type="password" id="s_nouveau" autocomplete="new-password" placeholder="Au moins 6 caractères"></div>
+          <div class="field"><label>Confirmer</label><input class="inp" type="password" id="s_confirm" autocomplete="new-password" placeholder="Retapez-le"></div>
+        </div>
+        <button class="btn btn-primary" id="sbtn" onclick="changerMotDePasse()">Mettre à jour mon mot de passe</button>
+      </div>
     </div>
   </main>
+</div>
+
+<!-- ============ MODALE CODE DE RÉCUPÉRATION ============ -->
+<div class="modal" id="codeModal">
+  <div class="mcard">
+    <div class="em">🗝️</div>
+    <h3>Votre code de récupération</h3>
+    <p>Notez-le et gardez-le en lieu sûr. Il vous permet de réinitialiser <b>vous-même</b> votre mot de passe si vous l'oubliez.</p>
+    <div class="code" id="codeVal">XXXX-XXXX-XXXX</div>
+    <div class="warnbox">⚠️ Ce code n'est affiché qu'une seule fois. Personne d'autre ne le connaît. Sans lui ni votre mot de passe, seul le support pourra vous déverrouiller.</div>
+    <button class="btn btn-ghost btn-block" style="margin-top:14px" onclick="copierCode()">📋 Copier le code</button>
+    <button class="btn btn-primary btn-block" style="margin-top:10px" onclick="fermerCode()">J'ai bien noté mon code</button>
+  </div>
 </div>
 
 <!-- ============ DRAWER PRODUIT ============ -->
@@ -298,7 +362,55 @@
    finally{ btn.disabled=false; btn.textContent='Se connecter'; }
    return false;
  }
- function logout(){ localStorage.removeItem(TOKEN_KEY); document.getElementById('app').classList.add('hidden'); document.getElementById('loginView').classList.remove('hidden'); }
+ function logout(){ localStorage.removeItem(TOKEN_KEY); document.getElementById('app').classList.add('hidden'); document.getElementById('loginView').classList.remove('hidden'); showReset(false); }
+
+ /* ---- Récupération d'accès (mot de passe oublié) ---- */
+ function showReset(on){
+   document.getElementById('loginForm').classList.toggle('hidden', on);
+   document.getElementById('resetForm').classList.toggle('hidden', !on);
+   document.getElementById('loginErr').classList.add('hidden');
+   document.getElementById('resetErr').classList.add('hidden');
+ }
+ async function doReset(e){
+   e.preventDefault();
+   const btn=document.getElementById('resetBtn'), err=document.getElementById('resetErr');
+   err.classList.add('hidden'); btn.disabled=true; btn.innerHTML='<span class="spin"></span>';
+   try{
+     const r = await fetch('/api/admin/reinitialiser', { method:'POST', headers:{'Content-Type':'application/json'},
+       body: JSON.stringify({ code: document.getElementById('rcode').value, nouveau: document.getElementById('rnew').value }) });
+     const d = await r.json();
+     if(!r.ok) throw new Error(d.erreur||'Réinitialisation refusée.');
+     localStorage.setItem(TOKEN_KEY, d.jeton);
+     showReset(false);
+     await enterApp();
+     montrerCode(d.codeRecuperation); // nouveau code après reset
+   }catch(ex){ err.textContent=ex.message; err.classList.remove('hidden'); }
+   finally{ btn.disabled=false; btn.textContent='Réinitialiser et se connecter'; }
+   return false;
+ }
+
+ /* ---- Changer mon mot de passe ---- */
+ async function changerMotDePasse(){
+   const actuel=document.getElementById('s_actuel').value;
+   const nouveau=document.getElementById('s_nouveau').value;
+   const confirm=document.getElementById('s_confirm').value;
+   if(nouveau.length<6){ toast('Le nouveau mot de passe doit faire au moins 6 caractères.', true); return; }
+   if(nouveau!==confirm){ toast('Les deux mots de passe ne correspondent pas.', true); return; }
+   const btn=document.getElementById('sbtn'); btn.disabled=true; btn.innerHTML='<span class="spin"></span>';
+   try{
+     const d = await api('POST','/api/admin/changer-motdepasse', { actuel, nouveau });
+     document.getElementById('s_actuel').value=''; document.getElementById('s_nouveau').value=''; document.getElementById('s_confirm').value='';
+     document.getElementById('secHint').textContent='Mot de passe personnel actif. Vous seule le connaissez.';
+     montrerCode(d.codeRecuperation);
+   }catch(ex){ toast(ex.message, true); }
+   finally{ btn.disabled=false; btn.textContent='Mettre à jour mon mot de passe'; }
+ }
+
+ /* ---- Modale code de récupération ---- */
+ let dernierCode='';
+ function montrerCode(code){ dernierCode=code; document.getElementById('codeVal').textContent=code; document.getElementById('codeModal').classList.add('open'); }
+ function fermerCode(){ document.getElementById('codeModal').classList.remove('open'); }
+ function copierCode(){ navigator.clipboard?.writeText(dernierCode).then(()=>toast('Code copié.')).catch(()=>toast('Copie impossible, notez-le à la main.', true)); }
 
  async function enterApp(){
    document.getElementById('loginView').classList.add('hidden');
@@ -307,6 +419,12 @@
    const sw=document.getElementById('pSwatches'); sw.innerHTML='';
    SWATCHES.forEach(c=>{ const b=document.createElement('button'); b.type='button'; b.className='sw'; b.style.background=c;
      b.onclick=()=>{ document.getElementById('p_couleur').value=c; [...sw.children].forEach(x=>x.classList.remove('on')); b.classList.add('on'); syncPreview(); }; sw.appendChild(b); });
+   // État sécurité : mot de passe perso déjà défini ?
+   try{ const s = await api('GET','/api/admin/session');
+     document.getElementById('secHint').textContent = s.motDePassePerso
+       ? 'Mot de passe personnel actif. Vous seule le connaissez.'
+       : 'Vous utilisez le mot de passe fourni. Définissez le vôtre : vous seule le connaîtrez.';
+   }catch{}
    await Promise.all([loadProduits(), loadCommandes(), loadReglages()]);
  }
 

@@ -60,6 +60,18 @@ db.exec(`
     cle    TEXT PRIMARY KEY,
     valeur TEXT NOT NULL DEFAULT ''
   );
+
+  -- Identifiants propres à Ludmilla (autonomie / confidentialité vis-à-vis de
+  -- Landry). Ligne unique id=1. Tant qu'aucune ligne n'existe, la connexion se
+  -- fait avec le mot de passe maître ADMIN_PASSWORD (défini par Landry) ; dès
+  -- qu'elle définit son mot de passe, password_hash prime. recovery_hash = code
+  -- de récupération (haché) qu'elle seule détient pour se déverrouiller seule.
+  CREATE TABLE IF NOT EXISTS admin_auth (
+    id            INTEGER PRIMARY KEY CHECK (id = 1),
+    password_hash TEXT,
+    recovery_hash TEXT,
+    maj_le        TEXT
+  );
 `);
 
 // STATUTS commande :
