@@ -1,0 +1,49 @@
+# Blueprint de déploiement Render pour la boutique L'Hair Afro.
+# Doc : https://render.com/docs/blueprint-spec
+# NB : le plan « starter » est PAYANT (pas de mise en veille + disque persistant
+# pour la base SQLite). Landry choisit/active le plan lui-même dans le dashboard.
+services:
+  - type: web
+    name: lhairafro-boutique
+    runtime: node
+    plan: starter                 # payant — activé par Landry
+    region: frankfurt             # centre de données le plus proche du Gabon
+    buildCommand: npm install
+    # Au démarrage : applique le schéma / amorce le catalogue, puis lance le serveur.
+    startCommand: npm run start:prod
+    healthCheckPath: /health
+    autoDeploy: true
+    disk:
+      name: data
+      mountPath: /var/data
+      sizeGB: 1
+    envVars:
+      - key: NODE_ENV
+        value: production
+      # Base SQLite sur le disque persistant.
+      - key: DATABASE_PATH
+        value: /var/data/lhairafro.db
+      # --- PVit : identifiants NON secrets (surchargent les défauts) ---------
+      - key: PVIT_SLUG
+        value: MR_1784284130
+      - key: PVIT_OPERATION_ACCOUNT
+        value: ACC_6A5A03E304ADF
+      - key: PVIT_URL_RENEW
+        value: /FMVCNVSMXCXS5RGQ/renew-secret
+      - key: PVIT_URL_REST
+        value: /v2/KPZTKPA5GQT1ZFNS/rest
+      # --- À COMPLÉTER dans le dashboard Render (valeurs à créer / secrètes) --
+      # PVIT_API_PASSWORD      : SECRET, posé par Landry (sync:false)
+      # PVIT_URL_STATUS        : code d'endpoint CHECK STATUS (page APIs)
+      # PVIT_CALLBACK_URL_CODE : code de l'URL callback créée dans PVit
+      # PVIT_RECEPTION_URL_CODE: code de l'URL de réception de clé créée dans PVit
+      - key: PVIT_API_PASSWORD
+        sync: false
+      - key: PVIT_URL_STATUS
+        sync: false
+      - key: PVIT_CALLBACK_URL_CODE
+        sync: false
+      - key: PVIT_RECEPTION_URL_CODE
+        sync: false
+      - key: BOUTIQUE_WHATSAPP
+        value: "24174598750"

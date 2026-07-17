@@ -1,0 +1,357 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>L'Hair Afro — Boutique en ligne</title>
+<meta name="description" content="Boutique en ligne L'Hair Afro : soins capillaires naturels et défrisés, coiffage et accessoires. Livraison à Libreville, paiement Mobile Money ou à la livraison.">
+<style>
+ *{box-sizing:border-box;margin:0;padding:0}
+ :root{--accent:#d63384;--accent2:#8e2de2;--ink:#12181f;--muted:#5b6976;--bg:#f6f8fa;--card:#fff;--line:#e7ecf0;--ok:#25D366}
+ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;color:var(--ink);background:var(--bg);line-height:1.55;-webkit-font-smoothing:antialiased}
+ a{color:inherit;text-decoration:none}
+ .wrap{max-width:1100px;margin:0 auto;padding:0 20px}
+
+ /* header boutique */
+ .head{position:sticky;top:0;z-index:40;background:rgba(255,255,255,.92);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+ .headin{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:13px 20px;max-width:1100px;margin:0 auto}
+ .logo{font-weight:800;font-size:1.15rem;letter-spacing:.2px}
+ .logo b{color:var(--accent)}
+ .logo em{font-style:normal;color:var(--accent2)}
+ .cartbtn{position:relative;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;border:none;cursor:pointer;font-weight:700;padding:11px 17px;border-radius:12px;font-size:.95rem;display:inline-flex;align-items:center;gap:8px}
+ .badge{position:absolute;top:-7px;right:-7px;background:#12181f;color:#fff;min-width:21px;height:21px;border-radius:999px;font-size:.72rem;display:flex;align-items:center;justify-content:center;padding:0 5px;font-weight:800}
+
+ /* hero mini */
+ .hero{background:linear-gradient(135deg,rgba(214,51,132,.9),rgba(142,45,226,.82)),url('assets/beaute.jpg') center/cover no-repeat;color:#fff;padding:40px 0 46px;border-radius:0 0 30px 30px}
+ .hero .chip{display:inline-block;background:rgba(255,255,255,.2);padding:6px 13px;border-radius:999px;font-size:.8rem;font-weight:600;margin-bottom:12px}
+ .hero h1{font-size:clamp(1.7rem,4.5vw,2.6rem);font-weight:800;line-height:1.1}
+ .hero p{opacity:.95;max-width:520px;margin-top:8px}
+
+ /* filtres */
+ .cats{display:flex;gap:9px;flex-wrap:wrap;padding:24px 0 6px}
+ .cat{background:var(--card);border:1px solid var(--line);border-radius:999px;padding:8px 16px;font-size:.88rem;font-weight:600;cursor:pointer;color:var(--muted);transition:.15s}
+ .cat.on{background:var(--accent);border-color:var(--accent);color:#fff}
+
+ /* grille produits */
+ .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:18px;padding:14px 0 40px}
+ .prod{background:var(--card);border:1px solid var(--line);border-radius:18px;overflow:hidden;display:flex;flex-direction:column;transition:transform .14s ease,box-shadow .14s}
+ .prod:hover{transform:translateY(-4px);box-shadow:0 18px 40px -22px rgba(16,32,48,.45)}
+ .thumb{aspect-ratio:1/1;display:flex;align-items:center;justify-content:center;font-size:3.4rem;position:relative;overflow:hidden}
+ .thumb img{width:100%;height:100%;object-fit:cover}
+ .pbody{padding:14px 15px 16px;display:flex;flex-direction:column;flex:1}
+ .pname{font-weight:700;font-size:1rem;line-height:1.25}
+ .pdesc{color:var(--muted);font-size:.85rem;margin:5px 0 12px;flex:1}
+ .prow{display:flex;align-items:center;justify-content:space-between;gap:8px}
+ .price{font-weight:800;color:var(--accent);font-size:1.08rem}
+ .add{background:#12181f;color:#fff;border:none;cursor:pointer;font-weight:700;padding:9px 13px;border-radius:10px;font-size:.85rem;white-space:nowrap;transition:.15s}
+ .add:hover{background:var(--accent)}
+ .loading{padding:60px 10px;text-align:center;color:var(--muted);grid-column:1/-1}
+
+ /* panier drawer */
+ .overlay{position:fixed;inset:0;background:rgba(16,24,31,.5);opacity:0;pointer-events:none;transition:.2s;z-index:60}
+ .overlay.open{opacity:1;pointer-events:auto}
+ .drawer{position:fixed;top:0;right:0;height:100%;width:min(420px,100%);background:#fff;z-index:70;transform:translateX(100%);transition:transform .26s ease;display:flex;flex-direction:column;box-shadow:-20px 0 60px -30px rgba(0,0,0,.5)}
+ .drawer.open{transform:translateX(0)}
+ .dhead{display:flex;align-items:center;justify-content:space-between;padding:18px 20px;border-bottom:1px solid var(--line)}
+ .dhead h3{font-size:1.15rem}
+ .x{background:none;border:none;font-size:1.5rem;cursor:pointer;color:var(--muted);line-height:1}
+ .items{flex:1;overflow-y:auto;padding:8px 20px}
+ .empty{color:var(--muted);text-align:center;padding:50px 10px;font-size:.95rem}
+ .it{display:flex;gap:12px;align-items:center;padding:14px 0;border-bottom:1px solid var(--line)}
+ .itimg{width:52px;height:52px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.6rem;flex-shrink:0}
+ .itinfo{flex:1;min-width:0}
+ .itname{font-weight:700;font-size:.9rem}
+ .itprice{color:var(--accent);font-weight:700;font-size:.85rem;margin-top:2px}
+ .qty{display:flex;align-items:center;gap:9px}
+ .qbtn{width:27px;height:27px;border-radius:8px;border:1px solid var(--line);background:#fff;cursor:pointer;font-weight:800;font-size:1rem;color:var(--ink);line-height:1}
+ .qn{min-width:18px;text-align:center;font-weight:700}
+ .dfoot{border-top:1px solid var(--line);padding:18px 20px}
+ .tot{display:flex;justify-content:space-between;font-weight:800;font-size:1.15rem;margin-bottom:14px}
+ .checkout{width:100%;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;border:none;cursor:pointer;font-weight:800;padding:15px;border-radius:14px;font-size:1.02rem}
+ .checkout:disabled{opacity:.45;cursor:not-allowed}
+
+ /* form commande */
+ .field{margin-bottom:13px}
+ .field label{display:block;font-size:.82rem;font-weight:700;margin-bottom:5px}
+ .field input,.field textarea{width:100%;border:1px solid var(--line);border-radius:11px;padding:11px 13px;font-size:.95rem;font-family:inherit}
+ .field textarea{resize:vertical;min-height:60px}
+ .pay{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:4px 0 6px}
+ .payopt{border:1.5px solid var(--line);border-radius:12px;padding:12px;cursor:pointer;font-size:.85rem;font-weight:600;text-align:center;transition:.15s}
+ .payopt .em{font-size:1.4rem;display:block;margin-bottom:4px}
+ .payopt.on{border-color:var(--accent);background:rgba(214,51,132,.06);color:var(--accent)}
+ .back{background:none;border:none;color:var(--muted);cursor:pointer;font-weight:600;font-size:.9rem;margin-bottom:8px;padding:0}
+ .hint{font-size:.78rem;color:var(--muted);margin-top:4px}
+
+ /* confirmation */
+ .done{text-align:center;padding:24px 6px}
+ .done .big{font-size:3.2rem}
+ .done h3{margin:8px 0 6px}
+ .done p{color:var(--muted);font-size:.92rem}
+ .ref{display:inline-block;background:#f2f4f7;border:1px solid var(--line);border-radius:8px;padding:4px 10px;font-weight:700;font-size:.82rem;margin-top:8px;letter-spacing:.04em}
+ .waorder{display:inline-flex;align-items:center;gap:8px;background:var(--ok);color:#083b1c;font-weight:800;padding:13px 20px;border-radius:12px;margin-top:16px}
+ .secondary{display:block;width:100%;background:#fff;border:1px solid var(--line);color:var(--ink);font-weight:700;padding:12px;border-radius:12px;margin-top:10px;cursor:pointer;font-size:.92rem}
+ .spin{display:inline-block;width:18px;height:18px;border:3px solid rgba(214,51,132,.25);border-top-color:var(--accent);border-radius:50%;animation:sp .7s linear infinite;vertical-align:middle}
+ @keyframes sp{to{transform:rotate(360deg)}}
+
+ footer{color:var(--muted);font-size:.84rem;text-align:center;padding:26px 0 40px}
+ footer a{color:var(--accent);font-weight:600}
+ @media(max-width:520px){.grid{grid-template-columns:repeat(2,1fr);gap:12px}.thumb{font-size:2.6rem}.add{padding:8px 10px}}
+</style>
+</head>
+<body>
+ <header class="head">
+   <div class="headin">
+     <a class="logo" href="index.html"><b>L'Hair</b> <em>Afro</em></a>
+     <button class="cartbtn" onclick="openCart()">🛒 Panier <span class="badge" id="badge">0</span></button>
+   </div>
+ </header>
+
+ <section class="hero">
+   <div class="wrap">
+     <span class="chip">💇 Beauté afro · Livraison à Libreville</span>
+     <h1>La boutique L'Hair Afro</h1>
+     <p>Vos soins capillaires naturels et défrisés, commandés en ligne et livrés chez vous.</p>
+   </div>
+ </section>
+
+ <div class="wrap">
+   <div class="cats" id="cats"></div>
+   <div class="grid" id="grid"><div class="loading">Chargement de la boutique…</div></div>
+ </div>
+
+ <footer>
+   <strong>L'Hair Afro</strong> — The Afro beauty concept store · Libreville<br>
+   Paiement Mobile Money (Airtel / Moov) ou à la livraison.
+ </footer>
+
+ <!-- Panier / Commande -->
+ <div class="overlay" id="overlay" onclick="closeCart()"></div>
+ <aside class="drawer" id="drawer" aria-label="Panier">
+   <div class="dhead"><h3 id="dtitle">🛒 Votre panier</h3><button class="x" onclick="closeCart()">×</button></div>
+   <div class="items" id="itemsPane"></div>
+   <div class="dfoot" id="foot"></div>
+ </aside>
+
+<script>
+ const FMT = n => Number(n).toLocaleString('fr-FR') + ' FCFA';
+
+ let PRODUCTS = [];      // rempli depuis /api/produits
+ let SHOP = { whatsapp: '24174598750', mobileMoneyActif: false };
+ let cart = {};          // id -> qty
+ let view = 'panier';
+ let payChoice = 'mobile_money';
+ let lastOrder = null;
+
+ const catsEl = document.getElementById('cats');
+ const grid = document.getElementById('grid');
+ const pane = document.getElementById('itemsPane');
+ const foot = document.getElementById('foot');
+ const dtitle = document.getElementById('dtitle');
+ let activeCat = 'Tous';
+
+ // ---- chargement initial (produits + infos boutique) ----
+ async function init(){
+   try{
+     const [rp, rb] = await Promise.all([ fetch('/api/produits'), fetch('/api/boutique') ]);
+     const dp = await rp.json();
+     PRODUCTS = (dp.produits||[]).map(p=>({ id:p.id, cat:p.categorie, name:p.nom, desc:p.description, price:p.prix, emo:p.emoji||'🛍️', bg:p.couleur||'#f7d9e8', img:p.image||'' }));
+     if(rb.ok){ const db = await rb.json(); SHOP = { whatsapp: db.whatsapp||SHOP.whatsapp, mobileMoneyActif: !!db.mobileMoneyActif }; }
+     if(!SHOP.mobileMoneyActif) payChoice='livraison';
+     renderCats(); renderGrid();
+   }catch(e){
+     grid.innerHTML = '<div class="loading">Boutique momentanément indisponible. Réessayez dans un instant.</div>';
+   }
+ }
+
+ function renderCats(){
+   const cats = ['Tous', ...new Set(PRODUCTS.map(p=>p.cat))];
+   catsEl.innerHTML='';
+   cats.forEach(c=>{
+     const b=document.createElement('button');
+     b.className='cat'+(c===activeCat?' on':'');
+     b.textContent=c;
+     b.onclick=()=>{activeCat=c;[...catsEl.children].forEach(x=>x.classList.remove('on'));b.classList.add('on');renderGrid();};
+     catsEl.appendChild(b);
+   });
+ }
+
+ function thumbHTML(p){
+   if(p.img) return `<div class="thumb" style="background:${p.bg}"><img src="${p.img}" alt="${p.name}"></div>`;
+   return `<div class="thumb" style="background:${p.bg}">${p.emo}</div>`;
+ }
+
+ function renderGrid(){
+   const list = PRODUCTS.filter(p=>activeCat==='Tous'||p.cat===activeCat);
+   if(!list.length){ grid.innerHTML='<div class="loading">Aucun produit dans cette catégorie.</div>'; return; }
+   grid.innerHTML = list.map(p=>`
+     <div class="prod">
+       ${thumbHTML(p)}
+       <div class="pbody">
+         <div class="pname">${p.name}</div>
+         <div class="pdesc">${p.desc}</div>
+         <div class="prow">
+           <div class="price">${FMT(p.price)}</div>
+           <button class="add" onclick="addToCart(${p.id})">+ Ajouter</button>
+         </div>
+       </div>
+     </div>`).join('');
+ }
+
+ // ---- panier ----
+ function addToCart(id){ cart[id]=(cart[id]||0)+1; updateBadge(); openCart(); }
+ function changeQty(id,d){ cart[id]=(cart[id]||0)+d; if(cart[id]<=0) delete cart[id]; updateBadge(); renderCart(); }
+ function count(){ return Object.values(cart).reduce((a,b)=>a+b,0); }
+ function total(){ return Object.entries(cart).reduce((s,[id,q])=>{const p=PRODUCTS.find(x=>x.id==id);return s+(p?p.price*q:0);},0); }
+ function updateBadge(){ document.getElementById('badge').textContent=count(); }
+
+ function openCart(){ document.getElementById('overlay').classList.add('open'); document.getElementById('drawer').classList.add('open'); if(view==='done'){view='panier';} renderCart(); }
+ function closeCart(){ document.getElementById('overlay').classList.remove('open'); document.getElementById('drawer').classList.remove('open'); }
+
+ function renderCart(){
+   if(view==='panier') return renderPanier();
+   if(view==='form')   return renderForm();
+   if(view==='done')   return renderDone();
+ }
+
+ function renderPanier(){
+   dtitle.textContent='🛒 Votre panier';
+   const ids=Object.keys(cart);
+   if(!ids.length){ pane.innerHTML='<div class="empty">Votre panier est vide.<br>Ajoutez vos produits préférés 💕</div>'; foot.innerHTML=''; return; }
+   pane.innerHTML=ids.map(id=>{
+     const p=PRODUCTS.find(x=>x.id==id), q=cart[id];
+     const vign = p.img ? `<img src="${p.img}" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:12px">` : p.emo;
+     return `<div class="it">
+       <div class="itimg" style="background:${p.bg}">${vign}</div>
+       <div class="itinfo">
+         <div class="itname">${p.name}</div>
+         <div class="itprice">${FMT(p.price*q)}</div>
+       </div>
+       <div class="qty">
+         <button class="qbtn" onclick="changeQty(${p.id},-1)">−</button>
+         <span class="qn">${q}</span>
+         <button class="qbtn" onclick="changeQty(${p.id},1)">+</button>
+       </div></div>`;
+   }).join('');
+   foot.innerHTML=`<div class="tot"><span>Total</span><span>${FMT(total())}</span></div>
+     <button class="checkout" onclick="goForm()">Commander →</button>`;
+ }
+
+ function goForm(){ if(!count())return; view='form'; renderCart(); }
+ function backPanier(){ view='panier'; renderCart(); }
+
+ function renderForm(){
+   dtitle.textContent='📦 Votre commande';
+   const mmActif = SHOP.mobileMoneyActif;
+   pane.innerHTML=`
+     <button class="back" onclick="backPanier()">← Retour au panier</button>
+     <div class="field"><label>Nom complet</label><input id="f_nom" placeholder="Ex : Marie NGOMA"></div>
+     <div class="field"><label>Téléphone</label><input id="f_tel" placeholder="Ex : 074 00 00 00" inputmode="tel"></div>
+     <div class="field"><label>Adresse de livraison</label><textarea id="f_adr" placeholder="Quartier, point de repère…"></textarea></div>
+     <div class="field"><label>Mode de paiement</label>
+       <div class="pay" id="pay">
+         <div class="payopt${payChoice==='mobile_money'?' on':''}" data-p="mobile_money" onclick="pickPay(this)"><span class="em">📲</span>Mobile Money<br>(Airtel / Moov)</div>
+         <div class="payopt${payChoice==='livraison'?' on':''}" data-p="livraison" onclick="pickPay(this)"><span class="em">💵</span>Paiement à la livraison</div>
+       </div>
+       ${mmActif ? '<div class="hint" id="payhint">Pour Mobile Money, une demande de paiement s\'affichera sur votre téléphone.</div>' : '<div class="hint" id="payhint">Le paiement Mobile Money en ligne arrive bientôt — votre commande sera confirmée sur WhatsApp.</div>'}
+     </div>`;
+   foot.innerHTML=`<div class="tot"><span>Total</span><span>${FMT(total())}</span></div>
+     <button class="checkout" id="submitBtn" onclick="submitOrder()">Valider la commande</button>`;
+ }
+ function pickPay(el){ payChoice=el.dataset.p; [...document.querySelectorAll('.payopt')].forEach(x=>x.classList.remove('on')); el.classList.add('on'); }
+
+ async function submitOrder(){
+   const nom=(document.getElementById('f_nom').value||'').trim();
+   const tel=(document.getElementById('f_tel').value||'').trim();
+   const adr=(document.getElementById('f_adr').value||'').trim();
+   if(!nom||!tel){ alert('Merci de renseigner votre nom et votre téléphone.'); return; }
+   if(payChoice==='livraison' && !adr){ alert('Indiquez votre adresse de livraison.'); return; }
+
+   const items = Object.entries(cart).map(([id,q])=>({id:Number(id), qte:q}));
+   const btn = document.getElementById('submitBtn');
+   if(btn){ btn.disabled=true; btn.innerHTML='<span class="spin"></span> Envoi…'; }
+   try{
+     const r = await fetch('/api/commandes', {
+       method:'POST', headers:{'Content-Type':'application/json'},
+       body: JSON.stringify({ client:{nom, telephone:tel, adresse:adr}, mode:payChoice, items })
+     });
+     const data = await r.json();
+     if(!r.ok){ throw new Error(data.erreur||'Commande refusée.'); }
+     lastOrder = {
+       nom, tel, adr, mode:payChoice, total:total(),
+       reference:data.reference, statut:data.statut, mobileMoneyActif:data.mobileMoneyActif,
+       message:data.message,
+       lines:Object.entries(cart).map(([id,q])=>{const p=PRODUCTS.find(x=>x.id==id);return `${q}× ${p.name} — ${FMT(p.price*q)}`;})
+     };
+     view='done'; renderCart();
+   }catch(e){
+     if(btn){ btn.disabled=false; btn.textContent='Valider la commande'; }
+     alert(e.message||'Une erreur est survenue. Réessayez.');
+   }
+ }
+
+ function waLink(){
+   const o=lastOrder;
+   let msg=`Bonjour L'Hair Afro ! Commande ${o.reference} :%0A%0A`;
+   o.lines.forEach(l=>msg+=`• ${l}%0A`);
+   const modeLabel = o.mode==='mobile_money' ? 'Mobile Money (Airtel/Moov)' : 'À la livraison';
+   msg+=`%0ATotal : ${FMT(o.total)}%0APaiement : ${modeLabel}%0A%0ANom : ${o.nom}%0ATél : ${o.tel}%0ALivraison : ${o.adr||'(à préciser)'}`;
+   return `https://wa.me/${SHOP.whatsapp}?text=${msg}`;
+ }
+
+ function renderDone(){
+   const o=lastOrder;
+   const prenom = (o.nom.split(' ')[0]||'');
+   let corps;
+   if(o.mode==='mobile_money' && o.statut==='en_attente'){
+     dtitle.textContent='📲 Paiement en cours';
+     corps = `<div class="big">📲</div>
+       <h3>Merci ${prenom} !</h3>
+       <p>Une demande de paiement de <b>${FMT(o.total)}</b> a été envoyée sur votre téléphone.<br>Validez-la avec votre code Mobile Money.</p>
+       <div class="ref">Réf. ${o.reference}</div>`;
+     foot.innerHTML=`<button class="checkout" id="checkBtn" onclick="verifierPaiement()">J'ai payé — vérifier</button>
+       <button class="secondary" onclick="window.open(waLink(),'_blank')">💬 Prévenir sur WhatsApp</button>`;
+   } else {
+     dtitle.textContent='✅ Commande envoyée';
+     const sousTitre = o.mode==='livraison'
+       ? `Votre commande de <b>${FMT(o.total)}</b> est enregistrée. Vous réglez <b>à la livraison</b>.`
+       : `Votre commande de <b>${FMT(o.total)}</b> est enregistrée. ${o.message||'Nous vous recontactons pour le paiement.'}`;
+     corps = `<div class="big">🎉</div>
+       <h3>Merci ${prenom} !</h3>
+       <p>${sousTitre}<br>Nous vous contactons pour la livraison à l'adresse indiquée.</p>
+       <div class="ref">Réf. ${o.reference}</div>`;
+     foot.innerHTML=`<a class="waorder" href="${waLink()}" target="_blank" style="width:100%;justify-content:center">💬 Confirmer sur WhatsApp</a>
+       <button class="secondary" onclick="resetShop()">Nouvelle commande</button>`;
+   }
+   pane.innerHTML=`<div class="done">${corps}</div>`;
+ }
+
+ async function verifierPaiement(){
+   const btn=document.getElementById('checkBtn');
+   if(btn){ btn.disabled=true; btn.innerHTML='<span class="spin"></span> Vérification…'; }
+   try{
+     const r = await fetch(`/api/commandes/${encodeURIComponent(lastOrder.reference)}/statut`);
+     const d = await r.json();
+     if(d.statut==='paye'){
+       pane.innerHTML=`<div class="done"><div class="big">✅</div><h3>Paiement confirmé !</h3>
+         <p>Merci ${lastOrder.nom.split(' ')[0]||''}, votre paiement de <b>${FMT(lastOrder.total)}</b> est bien reçu.<br>Nous préparons votre commande.</p>
+         <div class="ref">Réf. ${lastOrder.reference}</div></div>`;
+       foot.innerHTML=`<button class="checkout" onclick="resetShop()">Nouvelle commande</button>`;
+     } else if(d.statut==='echoue'){
+       if(btn){ btn.disabled=false; btn.textContent="Réessayer la vérification"; }
+       alert("Le paiement n'a pas abouti. Vous pouvez réessayer ou nous écrire sur WhatsApp.");
+     } else {
+       if(btn){ btn.disabled=false; btn.textContent="J'ai payé — vérifier"; }
+       alert("Paiement pas encore confirmé. Validez la demande sur votre téléphone, puis réessayez.");
+     }
+   }catch(e){
+     if(btn){ btn.disabled=false; btn.textContent="J'ai payé — vérifier"; }
+     alert('Vérification indisponible pour le moment.');
+   }
+ }
+
+ function resetShop(){ cart={}; updateBadge(); view='panier'; lastOrder=null; closeCart(); renderGrid(); }
+
+ init();
+</script>
+</body>
+</html>
