@@ -26,6 +26,10 @@ app.use(
       directives: {
         defaultSrc: ["'self'"],
         scriptSrc: ["'self'", "'unsafe-inline'"],
+        // Autorise les gestionnaires d'événements inline (onclick=…) utilisés par
+        // la boutique et l'admin. Sans ça, helmet impose script-src-attr 'none'
+        // et TOUS les boutons inline (panier, etc.) deviennent inertes.
+        scriptSrcAttr: ["'unsafe-inline'"],
         styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
         fontSrc: ["'self'", 'https://fonts.gstatic.com'],
         imgSrc: ["'self'", 'data:', 'https:'],
