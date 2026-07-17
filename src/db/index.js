@@ -53,6 +53,13 @@ db.exec(`
 
   CREATE INDEX IF NOT EXISTS idx_cmd_ref       ON commandes(reference);
   CREATE INDEX IF NOT EXISTS idx_cmd_pvit_ref  ON commandes(pvit_reference_id);
+
+  -- Réglages éditables depuis l'arrière-boutique (nom, slogan, WhatsApp…).
+  -- Une valeur ici SURCHARGE la valeur d'environnement correspondante.
+  CREATE TABLE IF NOT EXISTS reglages (
+    cle    TEXT PRIMARY KEY,
+    valeur TEXT NOT NULL DEFAULT ''
+  );
 `);
 
 // STATUTS commande :
@@ -61,6 +68,7 @@ db.exec(`
 //   'paye'              -> paiement confirmé (PVit SUCCESS)
 //   'echoue'            -> paiement Mobile Money refusé / expiré
 //   'a_confirmer'       -> Mobile Money demandé mais rail PVit non configuré (repli WhatsApp)
+//   'livre'             -> commande remise à la cliente (marquée « livré » depuis l'admin)
 
 // --- Amorçage du catalogue (10 produits placeholder de la maquette validée) --
 const nbProduits = db.prepare('SELECT COUNT(*) AS n FROM produits').get().n;

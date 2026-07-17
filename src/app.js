@@ -9,6 +9,8 @@ const config = require('./config');
 
 const boutique = require('./controllers/boutiqueController');
 const commande = require('./controllers/commandeController');
+const admin = require('./controllers/adminController');
+const auth = require('./services/auth');
 
 const app = express();
 
@@ -44,7 +46,10 @@ app.use(
   })
 );
 
-app.use(express.json({ limit: '1mb' }));
+// Limite relevée à 8 Mo : l'admin peut envoyer une photo produit en Data URL
+// (base64). Les images sont redimensionnées côté navigateur, donc en pratique
+// bien en dessous, mais on garde de la marge.
+app.use(express.json({ limit: '8mb' }));
 app.use(express.urlencoded({ extended: true }));
 if (config.env !== 'test') app.use(morgan('dev'));
 
@@ -62,8 +67,34 @@ app.get('/api/produits', boutique.listeProduits);
 app.post('/api/commandes', commande.creerCommande);
 app.get('/api/commandes/:reference/statut', commande.statutCommande);
 
+// --- API arrière-boutique (espace de gestion de Ludmilla) -------------------
+// La connexion est publique ; tout le reste est protégé par auth.protege.
+app.post('/api/admin/login', admin.login);
+app.get('/api/admin/session', auth.protege, admin.session);
+
+app.get('/api/admin/produits', auth.protege, admin.listeProduits);
+app.post('/api/admin/produits', auth.protege, admin.creerProduit);
+app.put('/api/admin/produits/:id', auth.protege, admin.modifierProduit);
+app.patch('/api/admin/produits/:id/actif', auth.protege, admin.basculerActif);
+app.delete('/api/admin/produits/:id', auth.protege, admin.supprimerProduit);
+app.post('/api/admin/produits/:id/image', auth.protege, admin.televerserImage);
+app.delete('/api/admin/produits/:id/image', auth.protege, admin.retirerImage);
+
+app.get('/api/admin/commandes', auth.protege, admin.listeCommandes);
+app.get('/api/admin/commandes/:reference', auth.protege, admin.detailCommande);
+app.patch('/api/admin/commandes/:reference/livree', auth.protege, admin.marquerLivree);
+
+app.get('/api/admin/reglages', auth.protege, admin.lireReglages);
+app.put('/api/admin/reglages', auth.protege, admin.ecrireReglages);
+
+// --- Photos produits téléversées (disque persistant en production) ----------
+app.use('/uploads', express.static(config.uploadsDir, { maxAge: '7d', fallthrough: true }));
+
 // --- Front statique ---------------------------------------------------------
 app.use(express.static(path.join(config.root, 'public')));
+
+// Raccourci : /admin -> page de l'arrière-boutique.
+app.get('/admin', (req, res) => res.sendFile(path.join(config.root, 'public', 'admin.html')));
 
 // 404 pour l'API ; sinon on renvoie l'accueil.
 app.use('/api', (req, res) => res.status(404).json({ erreur: 'Route introuvable.' }));

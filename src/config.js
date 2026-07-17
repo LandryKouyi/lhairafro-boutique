@@ -19,6 +19,26 @@ const config = {
 
   dbPath: path.resolve(root, process.env.DATABASE_PATH || './data/lhairafro.db'),
 
+  // Dossier des photos produits téléversées par Ludmilla. Sur Render, on le place
+  // sur le disque persistant (à côté de la base) pour qu'il survive aux déploiements.
+  // Par défaut : dossier « uploads » à côté de la base SQLite.
+  uploadsDir: process.env.UPLOADS_DIR
+    ? path.resolve(root, process.env.UPLOADS_DIR)
+    : path.join(path.dirname(path.resolve(root, process.env.DATABASE_PATH || './data/lhairafro.db')), 'uploads'),
+
+  // Espace de gestion (arrière-boutique). Le mot de passe est SECRET : il vient
+  // de l'environnement (ADMIN_PASSWORD) et n'est JAMAIS écrit en dur. Vide =
+  // l'accès admin est verrouillé (aucune connexion possible) tant que Landry ne
+  // l'a pas posé sur Render. Le secret de signature des jetons se dérive du mot
+  // de passe (+ ADMIN_SESSION_SECRET optionnel) : changer le mot de passe
+  // invalide donc les sessions ouvertes.
+  admin: {
+    password: process.env.ADMIN_PASSWORD || '',
+    sessionSecret: process.env.ADMIN_SESSION_SECRET || '',
+    // Durée de validité d'une session admin (heures).
+    sessionHeures: parseInt(process.env.ADMIN_SESSION_HEURES, 10) || 12,
+  },
+
   // URL publique du site (Render la fournit via RENDER_EXTERNAL_URL) — sert à
   // construire d'éventuels liens absolus.
   publicUrl: (process.env.PUBLIC_URL || process.env.RENDER_EXTERNAL_URL || '').replace(/\/+$/, ''),

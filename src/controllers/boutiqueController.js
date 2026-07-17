@@ -12,13 +12,20 @@ function listeProduits(req, res) {
 }
 
 // GET /api/boutique — métadonnées de la boutique (nom, WhatsApp, rail paiement).
+// Les réglages éditables depuis l'arrière-boutique (table reglages) SURCHARGENT
+// les valeurs d'environnement, pour que les changements de Ludmilla soient
+// répercutés en direct sur la boutique publique.
 function infosBoutique(req, res) {
   const pvit = require('../services/pvit');
+  const reglages = {};
+  try {
+    for (const r of db.prepare('SELECT cle, valeur FROM reglages').all()) reglages[r.cle] = r.valeur;
+  } catch { /* table absente au tout premier démarrage : on retombe sur l'environnement */ }
   res.json({
-    nom: config.boutique.nom,
-    slogan: config.boutique.slogan,
+    nom: reglages.nom || config.boutique.nom,
+    slogan: reglages.slogan || config.boutique.slogan,
     ville: config.boutique.ville,
-    whatsapp: config.boutique.whatsapp,
+    whatsapp: reglages.whatsapp || config.boutique.whatsapp,
     telephone: config.boutique.telephone,
     // Indique au front si le paiement Mobile Money en ligne est réellement actif.
     mobileMoneyActif: pvit.estConfigure(),

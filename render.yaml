@@ -23,6 +23,14 @@ services:
       # Base SQLite sur le disque persistant.
       - key: DATABASE_PATH
         value: /var/data/lhairafro.db
+      # Photos produits téléversées depuis l'arrière-boutique -> disque persistant.
+      - key: UPLOADS_DIR
+        value: /var/data/uploads
+      # --- Arrière-boutique (espace de gestion de Ludmilla) -----------------
+      # ADMIN_PASSWORD : SECRET, posé par Landry (sync:false). Tant qu'il est
+      # absent, l'espace /admin est verrouillé (aucune connexion possible).
+      - key: ADMIN_PASSWORD
+        sync: false
       # --- PVit : identifiants NON secrets (surchargent les défauts) ---------
       - key: PVIT_SLUG
         value: MR_1784284130
