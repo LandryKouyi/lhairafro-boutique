@@ -134,6 +134,23 @@ async function initierPaiement({ transactionId, montant, description, client = {
   }
   const msisdn = normaliserMsisdn(client.telephone);
   const operateur = normaliserOperateur(client.operateur, msisdn);
+
+  // KYC avant transaction (recommandé par la doc PVit). Best-effort : une
+  // indisponibilité du service KYC ne doit pas empêcher une vente légitime ;
+  // on ne rejette que si l'opérateur confirme un numéro INACTIF/inexistant.
+  if (cfg().urlKyc) {
+    try {
+      const kyc = await verifierClientKyc(msisdn, operateur);
+      if (kyc.actif === false) {
+        const e = new Error("Ce numéro Mobile Money est introuvable ou inactif. Vérifiez le numéro saisi.");
+        e.status = 400; e.expose = true; throw e;
+      }
+    } catch (err) {
+      if (err.expose) throw err; // rejet KYC explicite -> on remonte au client
+      console.warn('[PVit KYC] vérification ignorée :', err.message); // best-effort
+    }
+  }
+
   // PVit impose une « reference » ALPHANUMÉRIQUE de 20 caractères max. Notre
   // référence interne (ex. « LHA-1718... ») contient des tirets et peut dépasser
   // 20 car. : on en dérive une version PVit-safe (le suivi réel se fait via le
@@ -222,6 +239,47 @@ async function verifierPaiement(pvitReferenceId) {
   return interpreterStatut(data.status || data.state, data);
 }
 
+// --- KYC (vérification d'identité du client) --------------------------------
+// GET {BASE}{KYC}?customerAccountNumber=<msisdn>[&operatorCode=<op>], en-tête
+// « X-Secret ». La doc marque cette API obligatoire avant d'initier une
+// transaction sensible. Réponses possibles selon version :
+//   v1 : { full_name, customer_account_number, is_active }
+//   v2 : { data: { ... } }
+// On interprète de façon défensive et on NE bloque JAMAIS sur une simple
+// indisponibilité (best-effort) : seul un compte explicitement inactif est
+// signalé à l'appelant.
+function interpreterKyc(data = {}) {
+  const d = (data && typeof data.data === 'object' && data.data) ? data.data : data;
+  const actifBrut = d.is_active ?? d.isActive ?? d.active ?? d.actif;
+  return {
+    nom: d.full_name || d.fullName || d.name || d.nom || '',
+    // true / false si connu, null si l'opérateur ne renvoie pas l'info.
+    actif: typeof actifBrut === 'boolean' ? actifBrut
+      : (actifBrut === undefined || actifBrut === null ? null : Boolean(actifBrut)),
+    brut: d,
+  };
+}
+
+async function verifierClientKyc(tel, operateur) {
+  if (!estConfigure() || !cfg().urlKyc) return { actif: null, nom: '', brut: {}, ignore: true };
+  const msisdn = normaliserMsisdn(tel);
+  const op = normaliserOperateur(operateur, msisdn);
+  const params = new URLSearchParams({ customerAccountNumber: msisdn });
+  if (op) params.set('operatorCode', op);
+  const url = `${joinPath(cfg().urlKyc)}?${params.toString()}`;
+
+  const secret = await obtenirSecret();
+  const faire = (s) => fetch(url, { method: 'GET', headers: { 'X-Secret': s, Accept: 'application/json' } });
+  let r = await faire(secret);
+  if (r.status === 401 || r.status === 403) r = await faire(await obtenirSecret(true));
+  const data = await r.json().catch(() => ({}));
+  if (!r.ok) {
+    const e = new Error(`PVit KYC : indisponible (HTTP ${r.status}) [${JSON.stringify(data).slice(0, 300)}]`);
+    e.status = 502; e.expose = false; throw e;
+  }
+  return interpreterKyc(data);
+}
+
 // Extrait de façon robuste la référence PVit d'un payload de webhook (les
 // exemples de la doc alternent transactionId / merchantReferenceId).
 function refDepuisWebhook(body = {}) {
@@ -233,7 +291,7 @@ function refDepuisWebhook(body = {}) {
 }
 
 module.exports = {
-  estConfigure, initierPaiement, verifierPaiement, obtenirSecret,
-  interpreterStatut, refDepuisWebhook,
+  estConfigure, initierPaiement, verifierPaiement, verifierClientKyc, obtenirSecret,
+  interpreterStatut, interpreterKyc, refDepuisWebhook,
   normaliserMsisdn, operateurDepuisMsisdn, normaliserOperateur,
 };

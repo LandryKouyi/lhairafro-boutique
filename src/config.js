@@ -75,10 +75,13 @@ const config = {
     // Chemins d'endpoint (relatifs à baseUrl), copiés de la page APIs L'Hair Afro.
     urlRenew: process.env.PVIT_URL_RENEW || '/FMVCNVSMXCXS5RGQ/renew-secret',
     urlRest: process.env.PVIT_URL_REST || '/v2/KPZTKPA5GQT1ZFNS/rest',
-    // CHECK STATUS : le code d'endpoint L'Hair Afro n'est pas encore relevé —
-    // à copier depuis la page APIs (Paramétrages → APIs). Vide = check status
-    // désactivé (la confirmation passe alors par le webhook).
-    urlStatus: process.env.PVIT_URL_STATUS || '',
+    // CHECK STATUS (v1) : source de vérité du statut d'un paiement. Code
+    // d'endpoint relevé sur la page APIs L'Hair Afro (Paramétrages → APIs).
+    urlStatus: process.env.PVIT_URL_STATUS || '/FYS1XHAGYCF4X1YX/status',
+    // KYC (v2) : vérification d'identité du client avant paiement. GET
+    // /v2/{codeUrl}/kyc. Code relevé sur la page APIs. Vide = KYC désactivé
+    // (best-effort, non bloquant).
+    urlKyc: process.env.PVIT_URL_KYC || '/v2/4ZGW50N5YLCFKTEY/kyc',
     // Codes d'URL créés dans PVit (Paramétrages → Urls), pointant vers le domaine
     // déployé : callback -> https://lhairafro.com/api/pvit-callback (code MKTAO),
     // réception de clé -> https://lhairafro.com/api/pvit-secret (code 7UMSP).
