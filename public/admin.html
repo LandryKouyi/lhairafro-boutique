@@ -5,6 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
 <title>L'Hair Afro — Espace de gestion</title>
+<!-- PWA : application installable sur le téléphone -->
+<link rel="manifest" href="/manifest.webmanifest">
+<meta name="theme-color" content="#d63384">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="L'Hair Afro">
+<link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
+<link rel="icon" type="image/png" href="/assets/icon-192.png">
 <style>
  *{box-sizing:border-box;margin:0;padding:0}
  :root{
@@ -110,6 +118,26 @@
  .st-a_confirmer{background:rgba(91,105,118,.14);color:var(--muted)}
  .st-echoue{background:rgba(229,72,77,.13);color:var(--danger)}
 
+ /* ---- Messagerie ---- */
+ .mbadge{display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;padding:0 5px;margin-left:6px;background:var(--accent);color:#fff;border-radius:999px;font-size:.68rem;font-weight:800;vertical-align:middle}
+ .notice{background:rgba(200,146,42,.12);color:#8a610f;border:1px solid rgba(200,146,42,.3);border-radius:12px;padding:12px 14px;font-size:.86rem;font-weight:600;margin-bottom:16px;display:flex;gap:9px;align-items:flex-start}
+ .notice.ok{background:rgba(37,211,102,.1);color:#128a3e;border-color:rgba(37,211,102,.3)}
+ .mrow{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:13px 16px;display:flex;align-items:center;gap:13px;cursor:pointer;transition:box-shadow .15s}
+ .mrow:hover{box-shadow:var(--shadow)}
+ .mrow.unread{border-left:3px solid var(--accent)}
+ .mrow .mdir{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1rem;flex:none}
+ .mrow .mdir.in{background:rgba(214,51,132,.1)} .mrow .mdir.out{background:rgba(142,45,226,.1)}
+ .mrow .mwho{flex:1;min-width:0}
+ .mrow .mtop{display:flex;gap:8px;align-items:baseline}
+ .mrow .mfrom{font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:190px}
+ .mrow .mfrom.b{font-weight:800}
+ .mrow .msubj{color:var(--ink);font-size:.9rem;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+ .mrow .mprev{color:var(--muted);font-size:.82rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+ .mrow .mdate{color:var(--muted);font-size:.76rem;white-space:nowrap;flex:none}
+ .mbody-read{white-space:pre-wrap;word-break:break-word;font-size:.94rem;line-height:1.6;margin-top:6px}
+ .mmeta{font-size:.82rem;color:var(--muted);margin-bottom:2px}
+ .mmeta b{color:var(--ink)}
+
  /* ---- Drawer / Modal ---- */
  .overlay{position:fixed;inset:0;background:rgba(16,24,31,.5);opacity:0;pointer-events:none;transition:.2s;z-index:60}
  .overlay.open{opacity:1;pointer-events:auto}
@@ -169,6 +197,7 @@
     <div style="text-align:center;margin-top:16px">
       <button type="button" class="linklike" onclick="showReset(true)">Mot de passe oublié ?</button>
     </div>
+    <button type="button" class="btn btn-ghost btn-block installable hidden" id="installBtnLogin" style="margin-top:18px" onclick="installerApp()">📲 Installer l'appli sur mon téléphone</button>
   </form>
 
   <!-- Réinitialisation par code de récupération -->
@@ -196,11 +225,15 @@
   <header class="top">
     <div class="topin">
       <div class="brand"><b>L'Hair</b> <em>Afro</em><small>Arrière-boutique</small></div>
-      <button class="btn btn-ghost" onclick="logout()">Se déconnecter</button>
+      <div style="display:flex;gap:8px;align-items:center">
+        <button class="btn btn-soft installable hidden" id="installBtn" onclick="installerApp()">📲 Installer l'appli</button>
+        <button class="btn btn-ghost" onclick="logout()">Se déconnecter</button>
+      </div>
     </div>
     <nav class="tabs">
       <button class="tab on" data-tab="produits" onclick="showTab('produits')">Produits</button>
       <button class="tab" data-tab="commandes" onclick="showTab('commandes')">Commandes</button>
+      <button class="tab" data-tab="messagerie" onclick="showTab('messagerie')">Messagerie<span class="mbadge hidden" id="mailBadge">0</span></button>
       <button class="tab" data-tab="reglages" onclick="showTab('reglages')">Réglages</button>
     </nav>
   </header>
@@ -227,6 +260,24 @@
     <div class="clist" id="clist"><div class="empty">Chargement…</div></div>
   </main>
 
+  <!-- ---- Onglet Messagerie ---- -->
+  <main class="wrap hidden" id="tab-messagerie">
+    <div class="barre">
+      <div>
+        <h2>Messagerie</h2>
+        <div class="sub" id="mSub">Boîte de contact@lhairafro.com</div>
+      </div>
+      <button class="btn btn-primary" id="mNewBtn" onclick="composerMessage(null)">✉️ Nouveau message</button>
+    </div>
+    <div id="mNotice"></div>
+    <div class="chips" id="mchips">
+      <button class="chip on" onclick="setDossier('tous')" data-dossier="tous">Tous</button>
+      <button class="chip" onclick="setDossier('in')" data-dossier="in">Reçus</button>
+      <button class="chip" onclick="setDossier('out')" data-dossier="out">Envoyés</button>
+    </div>
+    <div class="clist" id="mlist"><div class="empty">Chargement…</div></div>
+  </main>
+
   <!-- ---- Onglet Réglages ---- -->
   <main class="wrap hidden" id="tab-reglages">
     <div class="barre"><div><h2>Réglages de la boutique</h2><div class="sub">Ces informations s'appliquent aussitôt à la boutique en ligne.</div></div></div>
@@ -246,6 +297,12 @@
         </div>
         <button class="btn btn-primary" id="sbtn" onclick="changerMotDePasse()">Mettre à jour mon mot de passe</button>
       </div>
+
+      <div class="seccard" style="margin-top:22px">
+        <h3>💰 Mon argent — MyPVit</h3>
+        <div class="hint">Consultez vos encaissements Mobile Money (Airtel & Moov) et gérez vos retraits d'argent sur votre tableau de bord MyPVit.</div>
+        <a class="btn btn-primary" href="https://mypvit.pro/dashboard" target="_blank" rel="noopener" style="text-decoration:none;display:inline-block">Ouvrir mon tableau de bord MyPVit ↗</a>
+      </div>
     </div>
   </main>
 </div>
@@ -260,6 +317,21 @@
     <div class="warnbox">⚠️ Ce code n'est affiché qu'une seule fois. Personne d'autre ne le connaît. Sans lui ni votre mot de passe, seul le support pourra vous déverrouiller.</div>
     <button class="btn btn-ghost btn-block" style="margin-top:14px" onclick="copierCode()">📋 Copier le code</button>
     <button class="btn btn-primary btn-block" style="margin-top:10px" onclick="fermerCode()">J'ai bien noté mon code</button>
+  </div>
+</div>
+
+<!-- ============ MODALE AIDE INSTALLATION (iPhone) ============ -->
+<div class="modal" id="iosModal">
+  <div class="mcard">
+    <div class="em">📲</div>
+    <h3>Installer l'appli sur iPhone</h3>
+    <p>En 3 gestes, l'icône <b>L'Hair Afro</b> apparaîtra sur votre écran d'accueil :</p>
+    <div style="text-align:left;font-size:.92rem;line-height:1.9;margin:14px 2px">
+      1️⃣ Appuyez sur le bouton <b>Partager</b> <span style="font-size:1.1rem">⎋</span> en bas de Safari.<br>
+      2️⃣ Choisissez <b>« Sur l'écran d'accueil »</b>.<br>
+      3️⃣ Appuyez sur <b>« Ajouter »</b>.
+    </div>
+    <button class="btn btn-primary btn-block" style="margin-top:8px" onclick="document.getElementById('iosModal').classList.remove('open')">J'ai compris</button>
   </div>
 </div>
 
@@ -315,6 +387,30 @@
   <div class="dhead"><h3 id="cTitle">Commande</h3><button class="x" onclick="closeCommande()">×</button></div>
   <div class="dbody" id="cBody"></div>
   <div class="dfoot" id="cFoot"></div>
+</aside>
+
+<!-- ============ DRAWER LECTURE MESSAGE ============ -->
+<div class="overlay" id="ovM" onclick="closeMessage()"></div>
+<aside class="drawer" id="drM">
+  <div class="dhead"><h3 id="mTitle">Message</h3><button class="x" onclick="closeMessage()">×</button></div>
+  <div class="dbody" id="mReadBody"></div>
+  <div class="dfoot" id="mReadFoot"></div>
+</aside>
+
+<!-- ============ DRAWER RÉDACTION MESSAGE ============ -->
+<div class="overlay" id="ovCompose" onclick="closeCompose()"></div>
+<aside class="drawer" id="drCompose">
+  <div class="dhead"><h3 id="composeTitle">Nouveau message</h3><button class="x" onclick="closeCompose()">×</button></div>
+  <div class="dbody">
+    <div class="field"><label>Destinataire (e-mail)</label><input class="inp" id="c_dest" type="email" placeholder="cliente@exemple.com" autocomplete="off"></div>
+    <div class="field"><label>Objet</label><input class="inp" id="c_sujet" placeholder="Votre commande L'Hair Afro"></div>
+    <div class="field"><label>Message</label><textarea class="inp" id="c_texte" style="min-height:200px" placeholder="Bonjour,&#10;&#10;…"></textarea></div>
+    <div class="sub" id="c_hint">L'e-mail partira depuis contact@lhairafro.com.</div>
+  </div>
+  <div class="dfoot">
+    <button class="btn btn-ghost" type="button" onclick="closeCompose()" style="flex:none">Annuler</button>
+    <button class="btn btn-primary" id="cSend" onclick="envoyerMessage()" style="flex:1">Envoyer</button>
+  </div>
 </aside>
 
 <div class="toast" id="toast"></div>
@@ -425,15 +521,27 @@
        ? 'Mot de passe personnel actif. Vous seule le connaissez.'
        : 'Vous utilisez le mot de passe fourni. Définissez le vôtre : vous seule le connaîtrez.';
    }catch{}
-   await Promise.all([loadProduits(), loadCommandes(), loadReglages()]);
+   await Promise.all([loadProduits(), loadCommandes(), loadReglages(), rafraichirBadgeMail()]);
+ }
+
+ /* rafraîchit le badge « non lus » de l'onglet Messagerie (léger, appelé au démarrage) */
+ async function rafraichirBadgeMail(){
+   try{ const d=await api('GET','/api/admin/messagerie/etat'); majBadgeMail(d.nonLus||0); }
+   catch{ /* silencieux */ }
+ }
+ function majBadgeMail(n){
+   const b=document.getElementById('mailBadge');
+   if(n>0){ b.textContent=n>99?'99+':n; b.classList.remove('hidden'); }
+   else b.classList.add('hidden');
  }
 
  /* ---------- Onglets ---------- */
  function showTab(name){
-   ['produits','commandes','reglages'].forEach(t=>{
+   ['produits','commandes','messagerie','reglages'].forEach(t=>{
      document.getElementById('tab-'+t).classList.toggle('hidden', t!==name);
      document.querySelector('.tab[data-tab="'+t+'"]').classList.toggle('on', t===name);
    });
+   if(name==='messagerie') loadMessagerie();
  }
 
  /* ---------- Produits ---------- */
@@ -625,6 +733,120 @@
    catch(ex){ toast(ex.message, true); }
  }
 
+ /* ---------- Messagerie ---------- */
+ let MESSAGES = [];
+ let dossierMail = 'tous';
+ let envoiActif = false;
+ let msgCourant = null;
+
+ async function loadMessagerie(){
+   const list=document.getElementById('mlist');
+   try{
+     const d = await api('GET', `/api/admin/messages?dossier=${dossierMail}`);
+     MESSAGES = d.messages||[]; envoiActif = !!d.envoiActif;
+     majBadgeMail(d.nonLus||0);
+     renderNoticeMail(d);
+     renderMessages();
+   }catch(ex){ list.innerHTML=`<div class="empty">${esc(ex.message)}</div>`; }
+ }
+ function renderNoticeMail(d){
+   const box=document.getElementById('mNotice');
+   document.getElementById('mNewBtn').disabled = !envoiActif;
+   document.getElementById('mSub').textContent = d.from ? ('Boîte de '+d.from) : 'Boîte de contact@lhairafro.com';
+   if(!envoiActif){
+     box.innerHTML = `<div class="notice">⏳ <div><b>Envoi en attente d'activation.</b> Vous pouvez déjà lire les messages reçus. L'envoi depuis votre adresse sera actif dès que le service e-mail sera configuré par votre prestataire.</div></div>`;
+   } else {
+     box.innerHTML = `<div class="notice ok">✅ <div>Messagerie active : vous recevez et envoyez depuis <b>${esc(d.from||'contact@lhairafro.com')}</b>.</div></div>`;
+   }
+ }
+ function setDossier(v){
+   dossierMail=v;
+   [...document.querySelectorAll('#mchips .chip')].forEach(c=>c.classList.toggle('on', c.dataset.dossier===v));
+   loadMessagerie();
+ }
+ function renderMessages(){
+   const list=document.getElementById('mlist');
+   if(!MESSAGES.length){ list.innerHTML='<div class="empty">Aucun message dans ce dossier.</div>'; return; }
+   list.innerHTML = MESSAGES.map(m=>{
+     const entrant = m.direction==='in';
+     const qui = entrant ? (m.de_nom || m.de_email) : ('À : '+m.a_email);
+     const nonlu = entrant && !m.lu;
+     return `<div class="mrow ${nonlu?'unread':''}" onclick="ouvrirMessage(${m.id})">
+       <div class="mdir ${entrant?'in':'out'}">${entrant?'📥':'📤'}</div>
+       <div class="mwho">
+         <div class="mtop"><span class="mfrom ${nonlu?'b':''}">${esc(qui)}</span></div>
+         <div class="msubj ${nonlu?'':''}">${esc(m.sujet||'(sans objet)')}</div>
+         <div class="mprev">${esc(m.apercu||'')}</div>
+       </div>
+       <span class="mdate">${dateFr(m.cree_le)}</span>
+     </div>`;
+   }).join('');
+ }
+
+ async function ouvrirMessage(id){
+   try{
+     const d = await api('GET', `/api/admin/messages/${id}`);
+     msgCourant = d.message;
+     const m = msgCourant, entrant = m.direction==='in';
+     document.getElementById('mTitle').textContent = m.sujet || '(sans objet)';
+     document.getElementById('mReadBody').innerHTML = `
+       <div class="mmeta">${entrant?'De':'À'} : <b>${esc(entrant?(m.de_nom?m.de_nom+' <'+m.de_email+'>':m.de_email):m.a_email)}</b></div>
+       <div class="mmeta">Le ${dateFr(m.cree_le)}</div>
+       <div class="mbody-read">${esc(m.corps_texte||'')||'<span style="color:var(--muted)">(message vide)</span>'}</div>`;
+     const foot=document.getElementById('mReadFoot');
+     let b='';
+     if(entrant && envoiActif) b += `<button class="btn btn-primary" style="flex:1" onclick="repondre()">↩︎ Répondre</button>`;
+     b += `<button class="btn btn-danger" style="flex:none" onclick="supprimerMessage(${m.id})">Supprimer</button>`;
+     foot.innerHTML = b;
+     document.getElementById('ovM').classList.add('open'); document.getElementById('drM').classList.add('open');
+     // le détail a marqué « lu » côté serveur : on rafraîchit la liste + badge
+     loadMessagerie();
+   }catch(ex){ toast(ex.message, true); }
+ }
+ function closeMessage(){ document.getElementById('ovM').classList.remove('open'); document.getElementById('drM').classList.remove('open'); }
+
+ function repondre(){
+   if(!msgCourant) return;
+   closeMessage();
+   const sujet = /^re\s*:/i.test(msgCourant.sujet||'') ? msgCourant.sujet : ('Re: '+(msgCourant.sujet||''));
+   composerMessage({ dest: msgCourant.de_email, sujet, repondAId: msgCourant.id });
+ }
+
+ let composeReplyId = null;
+ function composerMessage(pre){
+   if(!envoiActif){ toast("L'envoi n'est pas encore activé.", true); return; }
+   composeReplyId = pre && pre.repondAId ? pre.repondAId : null;
+   document.getElementById('composeTitle').textContent = pre && pre.repondAId ? 'Répondre' : 'Nouveau message';
+   document.getElementById('c_dest').value = pre? (pre.dest||'') : '';
+   document.getElementById('c_sujet').value = pre? (pre.sujet||'') : '';
+   document.getElementById('c_texte').value = '';
+   document.getElementById('ovCompose').classList.add('open'); document.getElementById('drCompose').classList.add('open');
+   setTimeout(()=>document.getElementById(pre&&pre.dest?'c_texte':'c_dest').focus(), 100);
+ }
+ function closeCompose(){ document.getElementById('ovCompose').classList.remove('open'); document.getElementById('drCompose').classList.remove('open'); }
+
+ async function envoyerMessage(){
+   const dest=document.getElementById('c_dest').value.trim();
+   const sujet=document.getElementById('c_sujet').value.trim();
+   const texte=document.getElementById('c_texte').value.trim();
+   if(!dest){ toast('Indiquez le destinataire.', true); return; }
+   if(!texte){ toast('Le message est vide.', true); return; }
+   const btn=document.getElementById('cSend'); btn.disabled=true; btn.innerHTML='<span class="spin"></span>';
+   try{
+     const body={ dest, sujet, texte }; if(composeReplyId) body.repondAId=composeReplyId;
+     await api('POST','/api/admin/messages/envoyer', body);
+     toast('E-mail envoyé.');
+     closeCompose(); await loadMessagerie();
+   }catch(ex){ toast(ex.message, true); }
+   finally{ btn.disabled=false; btn.textContent='Envoyer'; }
+ }
+
+ async function supprimerMessage(id){
+   if(!confirm('Supprimer ce message ?')) return;
+   try{ await api('DELETE',`/api/admin/messages/${id}`); toast('Message supprimé.'); closeMessage(); await loadMessagerie(); }
+   catch(ex){ toast(ex.message, true); }
+ }
+
  /* ---------- Réglages ---------- */
  async function loadReglages(){
    try{ const d=await api('GET','/api/admin/reglages'); const r=d.reglages||{};
@@ -646,6 +868,37 @@
  function esc(s){ return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
  function dateFr(s){ if(!s) return '—'; const d=new Date(s.replace(' ','T')+'Z'); return isNaN(d)? s : d.toLocaleDateString('fr-FR',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}); }
  function rgbToHex(rgb){ const m=/rgb\((\d+),\s*(\d+),\s*(\d+)\)/.exec(rgb); if(!m) return rgb; return '#'+[1,2,3].map(i=>(+m[i]).toString(16).padStart(2,'0')).join(''); }
+
+ /* ---------- PWA : installation sur le téléphone ---------- */
+ let deferredPrompt = null;
+ const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+ const enAppli = window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+
+ function showInstall(on){ document.querySelectorAll('.installable').forEach(b=>b.classList.toggle('hidden', !on)); }
+
+ // Chrome / Android : on capte l'invite native et on affiche nos boutons.
+ window.addEventListener('beforeinstallprompt', (e)=>{ e.preventDefault(); deferredPrompt=e; showInstall(true); });
+ window.addEventListener('appinstalled', ()=>{ deferredPrompt=null; showInstall(false); toast('Application installée ✅'); });
+
+ async function installerApp(){
+   if(deferredPrompt){
+     deferredPrompt.prompt();
+     try{ await deferredPrompt.userChoice; }catch{}
+     deferredPrompt=null; showInstall(false);
+   } else if(isIOS){
+     document.getElementById('iosModal').classList.add('open'); // Safari n'a pas d'invite : on guide
+   } else {
+     toast("Ouvrez ce site dans Chrome puis utilisez « Installer l'application » du menu ⋮.");
+   }
+ }
+
+ // iPhone (hors appli) : pas d'événement natif -> on montre quand même le bouton (guide manuel).
+ if(isIOS && !enAppli) showInstall(true);
+
+ // Enregistrement du service worker (rend l'appli installable + coquille hors ligne).
+ if('serviceWorker' in navigator){
+   window.addEventListener('load', ()=>{ navigator.serviceWorker.register('/sw.js').catch(()=>{}); });
+ }
 
  /* ---------- démarrage : session persistante ---------- */
  (async function(){

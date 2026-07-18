@@ -72,6 +72,25 @@ db.exec(`
     recovery_hash TEXT,
     maj_le        TEXT
   );
+
+  -- Messagerie de l'arrière-boutique (boîte de contact@lhairafro.com).
+  -- Réception : POST /api/mail-inbound (Cloudflare Email Worker) -> direction 'in'.
+  -- Envoi     : via l'API Brevo depuis l'admin -> direction 'out'.
+  CREATE TABLE IF NOT EXISTS messages (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    direction   TEXT    NOT NULL,            -- 'in' (reçu) | 'out' (envoyé)
+    de_email    TEXT    NOT NULL DEFAULT '',
+    de_nom      TEXT    NOT NULL DEFAULT '',
+    a_email     TEXT    NOT NULL DEFAULT '',
+    sujet       TEXT    NOT NULL DEFAULT '',
+    corps_texte TEXT    NOT NULL DEFAULT '',
+    corps_html  TEXT    NOT NULL DEFAULT '',
+    message_id  TEXT    NOT NULL DEFAULT '', -- Message-Id du mail
+    in_reply_to TEXT    NOT NULL DEFAULT '', -- Message-Id auquel il répond
+    lu          INTEGER NOT NULL DEFAULT 0,  -- 1 = lu (les 'out' sont lus d'office)
+    cree_le     TEXT    NOT NULL DEFAULT (datetime('now'))
+  );
+  CREATE INDEX IF NOT EXISTS idx_msg_cree ON messages(cree_le);
 `);
 
 // STATUTS commande :

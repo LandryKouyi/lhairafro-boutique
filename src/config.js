@@ -96,6 +96,22 @@ const config = {
     ownerChargeOperator: process.env.PVIT_OWNER_CHARGE_OPERATOR || 'CUSTOMER',
   },
 
+  // Messagerie de l'arrière-boutique — envoi via l'API Brevo (transactionnel),
+  // réception via un Cloudflare Email Worker qui POSTe sur /api/mail-inbound.
+  // Tant que brevoApiKey est vide, l'envoi est désactivé proprement (le module
+  // Messagerie s'affiche « en attente d'activation », rien ne plante). La clé
+  // Brevo est SECRÈTE : elle vient de l'environnement, jamais écrite en dur.
+  mail: {
+    brevoApiKey: process.env.BREVO_API_KEY || '',
+    // Expéditeur : doit être une adresse d'un domaine authentifié dans Brevo
+    // (DKIM/SPF posés en TXT sur lhairafro.com — ne touche pas aux MX/OTP).
+    fromEmail: process.env.MAIL_FROM_EMAIL || 'contact@lhairafro.com',
+    fromName: process.env.MAIL_FROM_NAME || "L'Hair Afro",
+    // Jeton partagé protégeant le webhook de réception (Worker Cloudflare -> app).
+    // Vide = réception désactivée (le webhook refuse tout). SECRET.
+    inboundToken: process.env.MAIL_INBOUND_TOKEN || '',
+  },
+
   timezone: 'Africa/Libreville',
 };
 

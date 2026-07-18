@@ -10,6 +10,7 @@ const config = require('./config');
 const boutique = require('./controllers/boutiqueController');
 const commande = require('./controllers/commandeController');
 const admin = require('./controllers/adminController');
+const mail = require('./controllers/mailController');
 const auth = require('./services/auth');
 
 const app = express();
@@ -64,6 +65,7 @@ app.get('/health', (req, res) => res.json({ status: 'ok', service: "lhairafro-bo
 // Déclarés en premier pour rester joignables tels quels.
 app.post('/api/pvit-callback', commande.pvitCallback); // webhook (statut définitif)
 app.post('/api/pvit-secret', commande.pvitSecretReception); // réception de la clé secrète
+app.post('/api/mail-inbound', mail.inbound); // réception d'e-mails (Cloudflare Email Worker)
 
 // --- API boutique -----------------------------------------------------------
 app.get('/api/boutique', boutique.infosBoutique);
@@ -92,6 +94,14 @@ app.patch('/api/admin/commandes/:reference/livree', auth.protege, admin.marquerL
 
 app.get('/api/admin/reglages', auth.protege, admin.lireReglages);
 app.put('/api/admin/reglages', auth.protege, admin.ecrireReglages);
+
+// --- Messagerie (boîte contact@lhairafro.com) -------------------------------
+app.get('/api/admin/messagerie/etat', auth.protege, mail.etat);
+app.get('/api/admin/messages', auth.protege, mail.liste);
+app.post('/api/admin/messages/envoyer', auth.protege, mail.envoyer);
+app.get('/api/admin/messages/:id', auth.protege, mail.detail);
+app.patch('/api/admin/messages/:id/lu', auth.protege, mail.marquerLu);
+app.delete('/api/admin/messages/:id', auth.protege, mail.supprimer);
 
 // --- Photos produits téléversées (disque persistant en production) ----------
 app.use('/uploads', express.static(config.uploadsDir, { maxAge: '7d', fallthrough: true }));

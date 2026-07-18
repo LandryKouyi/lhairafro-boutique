@@ -1,0 +1,9 @@
+name = "lhairafro-email"
+main = "src/email-worker.js"
+compatibility_date = "2024-11-01"
+
+# Les 3 variables sont posées en SECRET (voir README) :
+#   wrangler secret put FORWARD_TO
+#   wrangler secret put INBOUND_URL
+#   wrangler secret put INBOUND_TOKEN
+# (ou via le dashboard Cloudflare : Workers → ce worker → Settings → Variables)
