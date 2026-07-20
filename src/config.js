@@ -47,7 +47,13 @@ const config = {
     .split(',')
     .map((s) => s.trim())
     .filter(Boolean)
-    .concat(process.env.RENDER_EXTERNAL_URL ? [process.env.RENDER_EXTERNAL_URL] : []),
+    .concat(process.env.RENDER_EXTERNAL_URL ? [process.env.RENDER_EXTERNAL_URL] : [])
+    // Domaine public de la boutique (custom domain Render). Servi sur la même
+    // origine que l'API, donc le navigateur envoie Origin: https://lhairafro.com
+    // sur les POST (commandes, connexion admin) : il DOIT être autorisé, sinon
+    // le middleware CORS rejette la requête (« Origine non autorisée par CORS »)
+    // et le client voit une erreur générique. On l'ajoute toujours, en dur.
+    .concat(['https://lhairafro.com', 'https://www.lhairafro.com']),
 
   boutique: {
     nom: process.env.BOUTIQUE_NOM || "L'Hair Afro",

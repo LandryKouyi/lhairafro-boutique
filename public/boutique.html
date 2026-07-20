@@ -30,6 +30,8 @@
  .logo{display:flex;align-items:baseline;gap:7px}
  .logo .b1{font-family:'Great Vibes',cursive;font-size:1.75rem;color:var(--accent);line-height:.7}
  .logo .b2{font-family:'Poppins',sans-serif;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--ink);font-size:.92rem}
+ .logo img.logo-img{height:46px;width:auto;display:block;mix-blend-mode:multiply}
+ footer img.logo-img{height:70px;width:auto;display:inline-block;margin-bottom:10px;mix-blend-mode:multiply}
  .cartbtn{position:relative;background:var(--accent);color:#fff;border:none;cursor:pointer;font-family:'Poppins',sans-serif;font-weight:500;padding:11px 18px;border-radius:999px;font-size:.92rem;display:inline-flex;align-items:center;gap:8px;box-shadow:0 12px 26px -12px rgba(150,64,191,.75);transition:transform .15s}
  .cartbtn:hover{transform:translateY(-2px)}
  .badge{position:absolute;top:-7px;right:-7px;background:var(--plum);color:#fff;min-width:21px;height:21px;border-radius:999px;font-size:.72rem;display:flex;align-items:center;justify-content:center;padding:0 5px;font-weight:600}
@@ -82,6 +84,8 @@
  .qbtn{width:27px;height:27px;border-radius:8px;border:1px solid var(--line);background:#fff;cursor:pointer;font-weight:600;font-size:1rem;color:var(--ink);line-height:1}
  .qbtn:hover{border-color:var(--accent);color:var(--accent)}
  .qn{min-width:18px;text-align:center;font-weight:600;color:var(--ink)}
+ .itdel{background:none;border:none;cursor:pointer;font-size:1.15rem;line-height:1;padding:4px;margin-left:4px;opacity:.55;transition:opacity .15s;flex-shrink:0}
+ .itdel:hover{opacity:1}
  .dfoot{border-top:1px solid var(--line);padding:18px 20px}
  .tot{display:flex;justify-content:space-between;font-weight:600;font-size:1.05rem;margin-bottom:14px;color:var(--ink)}
  .tot span:last-child{font-family:'Cormorant Garamond',serif;font-weight:700;font-size:1.4rem;color:var(--accent)}
@@ -121,7 +125,7 @@
 <body>
  <header class="head">
    <div class="headin">
-     <a class="logo" href="index.html"><span class="b1">L'Hair</span><span class="b2">Afro</span></a>
+     <a class="logo" href="index.html"><img class="logo-img" src="assets/logo-lhairafro.jpeg" alt="L'Hair Afro"></a>
      <button class="cartbtn" onclick="openCart()">🛒 Panier <span class="badge" id="badge">0</span></button>
    </div>
  </header>
@@ -140,6 +144,7 @@
  </div>
 
  <footer>
+   <img class="logo-img" src="assets/logo-lhairafro.jpeg" alt="L'Hair Afro"><br>
    <strong>L'Hair Afro</strong> — The Afro beauty concept store · Libreville<br>
    Paiement Mobile Money (Airtel / Moov) ou à la livraison.
  </footer>
@@ -220,6 +225,7 @@
  // ---- panier ----
  function addToCart(id){ cart[id]=(cart[id]||0)+1; updateBadge(); openCart(); }
  function changeQty(id,d){ cart[id]=(cart[id]||0)+d; if(cart[id]<=0) delete cart[id]; updateBadge(); renderCart(); }
+function removeItem(id){ delete cart[id]; updateBadge(); renderCart(); }
  function count(){ return Object.values(cart).reduce((a,b)=>a+b,0); }
  function total(){ return Object.entries(cart).reduce((s,[id,q])=>{const p=PRODUCTS.find(x=>x.id==id);return s+(p?p.price*q:0);},0); }
  function updateBadge(){ document.getElementById('badge').textContent=count(); }
@@ -250,7 +256,8 @@
          <button class="qbtn" onclick="changeQty(${p.id},-1)">−</button>
          <span class="qn">${q}</span>
          <button class="qbtn" onclick="changeQty(${p.id},1)">+</button>
-       </div></div>`;
+       </div>
+       <button class="itdel" title="Retirer l'article du panier" aria-label="Retirer" onclick="removeItem(${p.id})">🗑️</button></div>`;
    }).join('');
    foot.innerHTML=`<div class="tot"><span>Total</span><span>${FMT(total())}</span></div>
      <button class="checkout" onclick="goForm()">Commander →</button>`;
