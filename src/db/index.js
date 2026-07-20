@@ -123,4 +123,27 @@ if (nbProduits === 0) {
   console.log(`   🌱 Catalogue amorcé : ${seed.length} produits placeholder.`);
 }
 
+// --- Migration catalogue v2 : vrais produits L'Hair Afro (Afro Kids) ----------
+// S'exécute UNE SEULE FOIS (gardée par le réglage 'catalogue_v'). Remplace les
+// produits placeholder par la vraie gamme, avec photos (/assets/produits/…) et
+// PRIX INDICATIFS — Ludmilla les ajuste ensuite depuis l'arrière-boutique.
+// Le drapeau garantit qu'on n'écrase JAMAIS les produits qu'elle aura édités.
+const catV = db.prepare("SELECT valeur FROM reglages WHERE cle = 'catalogue_v'").get();
+if (!catV || catV.valeur !== '2') {
+  const vrais = [
+    ['Soins',    'Huile capillaire Afro Kids',       'Huile légère qui nourrit, fait briller et protège les cheveux des enfants.',        3500, '🧴', '#efe3f7', '/assets/produits/huile-capillaire.jpg'],
+    ['Soins',    'Après-shampoing sans rinçage',     'Démêle et lisse les frisottis, hydrate sans rincer. 250 ml.',                       4000, '🧴', '#efe3f7', '/assets/produits/apres-shampoing.jpg'],
+    ['Soins',    'Shampooing & gel douche 2 en 1',   'Nettoie cheveux et corps en douceur, élimine les impuretés. 250 ml.',               3500, '🧴', '#efe3f7', '/assets/produits/shampooing-2en1.jpg'],
+    ['Coiffage', 'Cire à cheveux Afro Kids',         'Discipline, gaine et fait tenir les coiffures des tout-petits.',                    3000, '🧴', '#efe3f7', '/assets/produits/cire-cheveux.jpg'],
+    ['Coffret',  'Coffret gamme Afro Kids',          'La routine complète des enfants réunie — idéal découverte ou cadeau.',             15000, '🎁', '#efe3f7', '/assets/gamme.jpg'],
+  ];
+  db.exec('DELETE FROM produits');
+  const insV = db.prepare(
+    'INSERT INTO produits (categorie, nom, description, prix, emoji, couleur, image, ordre) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
+  );
+  vrais.forEach((p, i) => insV.run(p[0], p[1], p[2], p[3], p[4], p[5], p[6], i + 1));
+  db.prepare("INSERT INTO reglages (cle, valeur) VALUES ('catalogue_v', '2') ON CONFLICT(cle) DO UPDATE SET valeur = '2'").run();
+  console.log(`   ✨ Catalogue migré (v2) : ${vrais.length} vrais produits Afro Kids, prix indicatifs.`);
+}
+
 module.exports = db;

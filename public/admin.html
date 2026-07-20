@@ -7,29 +7,32 @@
 <title>L'Hair Afro — Espace de gestion</title>
 <!-- PWA : application installable sur le téléphone -->
 <link rel="manifest" href="/manifest.webmanifest">
-<meta name="theme-color" content="#d63384">
+<meta name="theme-color" content="#9640BF">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="L'Hair Afro">
 <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
 <link rel="icon" type="image/png" href="/assets/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Cormorant+Garamond:wght@600;700&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
  *{box-sizing:border-box;margin:0;padding:0}
  :root{
-   --accent:#d63384;--accent2:#8e2de2;--ink:#12181f;--muted:#5b6976;
-   --bg:#f6f8fa;--card:#fff;--line:#e7ecf0;--ok:#25D366;--warn:#c8922a;--danger:#e5484d;
+   --accent:#9640BF;--accent2:#B46AD4;--ink:#3D1B4E;--muted:#8B7E95;
+   --bg:#F7F2FA;--card:#fff;--line:#ECE4F1;--ok:#25D366;--warn:#c8922a;--danger:#e5484d;
    --grad:linear-gradient(135deg,var(--accent),var(--accent2));
-   --shadow:0 18px 40px -24px rgba(16,32,48,.5);
+   --shadow:0 18px 40px -24px rgba(61,27,78,.5);
  }
- body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;color:var(--ink);background:var(--bg);line-height:1.5;-webkit-font-smoothing:antialiased}
+ body{font-family:'Poppins',sans-serif;color:var(--ink);background:var(--bg);line-height:1.5;-webkit-font-smoothing:antialiased}
  button{font-family:inherit}
  input,textarea,select{font-family:inherit}
  .hidden{display:none!important}
 
  /* ---- Connexion ---- */
  .login{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;
-   background:radial-gradient(1200px 500px at 15% -10%,rgba(214,51,132,.16),transparent),
-              radial-gradient(1000px 500px at 100% 10%,rgba(142,45,226,.14),transparent),var(--bg)}
+   background:radial-gradient(1200px 500px at 15% -10%,rgba(150,64,191,.16),transparent),
+              radial-gradient(1000px 500px at 100% 10%,rgba(180,106,212,.14),transparent),var(--bg)}
  .lcard{background:var(--card);border:1px solid var(--line);border-radius:22px;box-shadow:var(--shadow);
    width:min(410px,100%);padding:34px 30px}
  .lbrand{font-weight:800;font-size:1.35rem;letter-spacing:.2px}
@@ -38,14 +41,14 @@
  .ltag .dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--grad);margin-right:7px;vertical-align:middle}
  label{display:block;font-size:.8rem;font-weight:700;margin-bottom:6px}
  .inp{width:100%;border:1px solid var(--line);border-radius:12px;padding:12px 14px;font-size:.98rem;background:#fff;transition:border-color .15s,box-shadow .15s}
- .inp:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(214,51,132,.12)}
+ .inp:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(150,64,191,.12)}
  .btn{border:none;cursor:pointer;font-weight:700;border-radius:12px;padding:12px 18px;font-size:.96rem;transition:transform .1s,box-shadow .15s,background .15s}
  .btn:active{transform:translateY(1px)}
- .btn-primary{background:var(--grad);color:#fff;box-shadow:0 10px 22px -10px rgba(214,51,132,.6)}
+ .btn-primary{background:var(--grad);color:#fff;box-shadow:0 10px 22px -10px rgba(150,64,191,.6)}
  .btn-primary:disabled{opacity:.55;cursor:not-allowed}
  .btn-block{width:100%;padding:14px}
  .btn-ghost{background:#fff;border:1px solid var(--line);color:var(--ink)}
- .btn-soft{background:rgba(214,51,132,.08);color:var(--accent)}
+ .btn-soft{background:rgba(150,64,191,.08);color:var(--accent)}
  .btn-danger{background:rgba(229,72,77,.1);color:var(--danger)}
  .msg{font-size:.86rem;padding:10px 12px;border-radius:10px;margin-top:14px}
  .msg-err{background:rgba(229,72,77,.1);color:var(--danger)}
@@ -60,7 +63,7 @@
  .mcard h3{margin:8px 0 6px;font-size:1.2rem}
  .mcard p{color:var(--muted);font-size:.9rem}
  .code{font-family:ui-monospace,"SFMono-Regular",Menlo,Consolas,monospace;font-size:1.5rem;font-weight:800;letter-spacing:.14em;
-   background:linear-gradient(135deg,rgba(214,51,132,.08),rgba(142,45,226,.08));border:1.5px dashed var(--accent);
+   background:linear-gradient(135deg,rgba(150,64,191,.08),rgba(180,106,212,.08));border:1.5px dashed var(--accent);
    border-radius:14px;padding:16px;margin:16px 0;color:var(--ink);word-break:break-all}
  .warnbox{background:rgba(200,146,42,.12);color:#8a610f;border-radius:12px;padding:11px 13px;font-size:.82rem;font-weight:600;text-align:left}
  .seccard{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px;margin-top:6px}
@@ -88,7 +91,7 @@
  .pcard.off{opacity:.62}
  .pthumb{aspect-ratio:1/1;display:flex;align-items:center;justify-content:center;font-size:3.2rem;overflow:hidden;position:relative}
  .pthumb img{width:100%;height:100%;object-fit:cover}
- .flag{position:absolute;top:10px;left:10px;background:#12181f;color:#fff;font-size:.68rem;font-weight:800;padding:3px 9px;border-radius:999px;letter-spacing:.03em}
+ .flag{position:absolute;top:10px;left:10px;background:#3D1B4E;color:#fff;font-size:.68rem;font-weight:800;padding:3px 9px;border-radius:999px;letter-spacing:.03em}
  .pbody{padding:13px 14px 14px;display:flex;flex-direction:column;flex:1}
  .pcat{font-size:.68rem;font-weight:800;text-transform:uppercase;letter-spacing:.1em;color:var(--accent2)}
  .pname{font-weight:700;font-size:.98rem;margin:3px 0 2px;line-height:1.25}
@@ -112,7 +115,7 @@
  .crow .camt{font-weight:800;color:var(--ink);white-space:nowrap}
  .st{font-size:.72rem;font-weight:800;padding:4px 10px;border-radius:999px;white-space:nowrap}
  .st-paye{background:rgba(37,211,102,.14);color:#128a3e}
- .st-livre{background:rgba(142,45,226,.12);color:var(--accent2)}
+ .st-livre{background:rgba(180,106,212,.12);color:var(--accent2)}
  .st-a_livrer{background:rgba(200,146,42,.16);color:#9a6f16}
  .st-en_attente{background:rgba(200,146,42,.14);color:#9a6f16}
  .st-a_confirmer{background:rgba(91,105,118,.14);color:var(--muted)}
@@ -126,7 +129,7 @@
  .mrow:hover{box-shadow:var(--shadow)}
  .mrow.unread{border-left:3px solid var(--accent)}
  .mrow .mdir{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1rem;flex:none}
- .mrow .mdir.in{background:rgba(214,51,132,.1)} .mrow .mdir.out{background:rgba(142,45,226,.1)}
+ .mrow .mdir.in{background:rgba(150,64,191,.1)} .mrow .mdir.out{background:rgba(180,106,212,.1)}
  .mrow .mwho{flex:1;min-width:0}
  .mrow .mtop{display:flex;gap:8px;align-items:baseline}
  .mrow .mfrom{font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:190px}
@@ -171,7 +174,7 @@
  .empty{text-align:center;color:var(--muted);padding:50px 10px}
 
  /* toast */
- .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(20px);background:#12181f;color:#fff;padding:12px 20px;border-radius:12px;font-weight:600;font-size:.9rem;opacity:0;pointer-events:none;transition:.25s;z-index:90;box-shadow:0 14px 34px -14px rgba(0,0,0,.6)}
+ .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(20px);background:#3D1B4E;color:#fff;padding:12px 20px;border-radius:12px;font-weight:600;font-size:.9rem;opacity:0;pointer-events:none;transition:.25s;z-index:90;box-shadow:0 14px 34px -14px rgba(0,0,0,.6)}
  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
  .toast.err{background:var(--danger)}
 

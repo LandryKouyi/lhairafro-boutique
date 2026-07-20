@@ -6,3 +6,6 @@ data/
 *.log
 .DS_Store
 Thumbs.db
+
+# Dossier source des images (lourd, non servi)
+Image/
