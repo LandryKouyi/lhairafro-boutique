@@ -75,7 +75,7 @@ db.exec(`
 
   -- Messagerie de l'arrière-boutique (boîte de contact@lhairafro.com).
   -- Réception : POST /api/mail-inbound (Cloudflare Email Worker) -> direction 'in'.
-  -- Envoi     : via l'API Brevo depuis l'admin -> direction 'out'.
+  -- Envoi     : via SMTP Gmail (compte relais) depuis l'admin -> direction 'out'.
   CREATE TABLE IF NOT EXISTS messages (
     id          INTEGER PRIMARY KEY AUTOINCREMENT,
     direction   TEXT    NOT NULL,            -- 'in' (reçu) | 'out' (envoyé)

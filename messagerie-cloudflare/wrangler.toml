@@ -1,6 +1,10 @@
 name = "lhairafro-email"
 main = "src/email-worker.js"
 compatibility_date = "2024-11-01"
+# Email Worker : déclenché par Cloudflare Email Routing, pas par HTTP.
+# On NE publie donc PAS de route workers.dev (évite l'erreur « register a
+# workers.dev subdomain »). Le script existe et reste rattachable à Email Routing.
+workers_dev = false
 
 # Les 3 variables sont posées en SECRET (voir README) :
 #   wrangler secret put FORWARD_TO

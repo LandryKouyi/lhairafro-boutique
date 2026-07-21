@@ -3,7 +3,8 @@
 La messagerie du Dashboard (`lhairafro.com/admin` → onglet **Messagerie**) permet à
 Ludmilla de **recevoir et envoyer** des e-mails depuis `contact@lhairafro.com`.
 
-- **Envoi** : via l'API **Brevo** (offre gratuite 300 mails/jour).
+- **Envoi** : via **SMTP Gmail** — un compte Gmail relais dédié à la boutique
+  (gratuit, ~500 destinataires/jour, aucun réglage DNS).
 - **Réception** : via un **Cloudflare Email Worker** qui parse l'e-mail entrant,
   le **renvoie** vers le Gmail de secours (⚠️ préserve l'OTP PVit) **et** le POSTe
   au webhook `/api/mail-inbound` de la boutique.
@@ -18,28 +19,30 @@ d'activation » sans rien casser.
 
 ---
 
-## Étape 1 — Brevo (envoi)
+## Étape 1 — Compte Gmail relais (envoi)
 
-1. Créer un compte sur **brevo.com** (gratuit).
-2. **Senders, Domains & Dedicated IPs → Domains → Authenticate a domain** :
-   saisir `lhairafro.com`.
-3. Brevo affiche **2-3 enregistrements DKIM/SPF (type TXT)** à ajouter dans le DNS.
-   Les créer sur **Cloudflare → lhairafro.com → DNS** (type **TXT**, tels quels).
-   *(Uniquement des TXT — on ne touche pas aux MX.)*
-4. Revenir sur Brevo → **Verify / Authenticate** jusqu'à ce que le domaine soit
-   ✅ authentifié.
-5. **SMTP & API → API Keys → Generate a new API key** → copier la clé
-   (commence par `xkeysib-…`).
+1. Créer un **compte Gmail dédié** à la boutique, ex. `contact.lhairafro@gmail.com`
+   (nécessite un numéro de téléphone pour la vérification SMS — étape humaine).
+2. Dans ce compte : **Compte Google → Sécurité → Validation en 2 étapes** →
+   l'activer.
+3. Toujours dans **Sécurité → Mots de passe des applications** → en générer un
+   (nom : « L'Hair Afro ») → copier les **16 caractères**.
+4. Gmail → ⚙️ **Paramètres → Comptes et importation → Envoyer des e-mails en
+   tant que → Ajouter une autre adresse** → saisir `contact@lhairafro.com`.
+   Gmail envoie un code de confirmation à cette adresse ; grâce au renvoi
+   Cloudflare (étapes 3-4), le code **arrive dans cette même boîte** → le coller.
+   *(Aucun réglage DNS : ni DKIM, ni SPF, ni MX touchés.)*
 
 ## Étape 2 — Variables sur Render (boutique)
 
 Dashboard Render → service **lhairafro-boutique** → **Environment** :
 
-| Variable            | Valeur                                             |
-|---------------------|----------------------------------------------------|
-| `BREVO_API_KEY`     | la clé `xkeysib-…` de l'étape 1                     |
-| `MAIL_FROM_EMAIL`   | `contact@lhairafro.com` (déjà par défaut)          |
-| `MAIL_INBOUND_TOKEN`| un jeton aléatoire, ex. `openssl rand -hex 24`     |
+| Variable             | Valeur                                             |
+|----------------------|----------------------------------------------------|
+| `GMAIL_USER`         | le compte Gmail relais, ex. `contact.lhairafro@gmail.com` |
+| `GMAIL_APP_PASSWORD` | les 16 caractères de l'étape 1 (les espaces sont ignorés) |
+| `MAIL_FROM_EMAIL`    | `contact@lhairafro.com` (déjà par défaut)          |
+| `MAIL_INBOUND_TOKEN` | un jeton aléatoire, ex. `openssl rand -hex 24`     |
 
 Enregistrer → Render redéploie. À ce stade, l'**envoi** fonctionne déjà
 (la boîte affiche « ✅ Messagerie active »).

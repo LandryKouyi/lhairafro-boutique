@@ -55,3 +55,18 @@ services:
         sync: false
       - key: BOUTIQUE_WHATSAPP
         value: "24174598750"
+      # --- Messagerie (boîte contact@lhairafro.com) --------------------------
+      # Envoi via SMTP Gmail (compte relais dédié). SECRETS posés par Landry :
+      #   GMAIL_USER         : le compte Gmail relais (ex. contact.lhairafro@gmail.com)
+      #   GMAIL_APP_PASSWORD : mot de passe d'application (16 caractères, 2FA)
+      #   MAIL_INBOUND_TOKEN : jeton partagé avec le Worker Cloudflare (réception)
+      # Tant que GMAIL_USER/GMAIL_APP_PASSWORD sont absents, l'envoi est désactivé
+      # proprement (module Messagerie « en attente d'activation »).
+      - key: GMAIL_USER
+        sync: false
+      - key: GMAIL_APP_PASSWORD
+        sync: false
+      - key: MAIL_INBOUND_TOKEN
+        sync: false
+      - key: MAIL_FROM_EMAIL
+        value: contact@lhairafro.com

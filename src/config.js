@@ -102,15 +102,24 @@ const config = {
     ownerChargeOperator: process.env.PVIT_OWNER_CHARGE_OPERATOR || 'CUSTOMER',
   },
 
-  // Messagerie de l'arrière-boutique — envoi via l'API Brevo (transactionnel),
-  // réception via un Cloudflare Email Worker qui POSTe sur /api/mail-inbound.
-  // Tant que brevoApiKey est vide, l'envoi est désactivé proprement (le module
-  // Messagerie s'affiche « en attente d'activation », rien ne plante). La clé
-  // Brevo est SECRÈTE : elle vient de l'environnement, jamais écrite en dur.
+  // Messagerie de l'arrière-boutique — envoi via SMTP Gmail (compte relais dédié
+  // à la boutique), réception via un Cloudflare Email Worker qui POSTe sur
+  // /api/mail-inbound. Tant que gmailUser/gmailAppPassword sont vides, l'envoi
+  // est désactivé proprement (le module Messagerie s'affiche « en attente
+  // d'activation », rien ne plante). Ces identifiants sont SECRETS : ils
+  // viennent de l'environnement, jamais écrits en dur.
+  //
+  // Choix Gmail SMTP : aucun réglage DNS (pas de DKIM/SPF à poser ni à attendre),
+  // ne touche pas aux MX de lhairafro.com — le renvoi Cloudflare qui achemine
+  // l'OTP PVit reste intact. Le compte Gmail est un simple relais serveur :
+  // personne ne s'y connecte au quotidien, Ludmilla ne voit que le Dashboard.
   mail: {
-    brevoApiKey: process.env.BREVO_API_KEY || '',
-    // Expéditeur : doit être une adresse d'un domaine authentifié dans Brevo
-    // (DKIM/SPF posés en TXT sur lhairafro.com — ne touche pas aux MX/OTP).
+    // Compte Gmail relais (ex. contact.lhairafro@gmail.com) + mot de passe
+    // d'application (16 caractères, généré dans le compte Google, 2FA requise).
+    gmailUser: process.env.GMAIL_USER || '',
+    gmailAppPassword: (process.env.GMAIL_APP_PASSWORD || '').replace(/\s+/g, ''),
+    // Expéditeur affiché : l'alias « Envoyer en tant que » configuré dans le
+    // compte Gmail relais. Ne touche pas aux MX/OTP.
     fromEmail: process.env.MAIL_FROM_EMAIL || 'contact@lhairafro.com',
     fromName: process.env.MAIL_FROM_NAME || "L'Hair Afro",
     // Jeton partagé protégeant le webhook de réception (Worker Cloudflare -> app).
