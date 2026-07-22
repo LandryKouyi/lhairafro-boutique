@@ -215,6 +215,14 @@ function marquerLivree(req, res) {
   res.json({ ok: true, statut: 'livre' });
 }
 
+// DELETE /api/admin/commandes/:reference — retrait définitif d'une commande.
+// Utile pour nettoyer les commandes de test avant la première vraie vente.
+function supprimerCommande(req, res) {
+  const info = db.prepare('DELETE FROM commandes WHERE reference = ?').run(String(req.params.reference));
+  if (!info.changes) { const e = new Error('Commande introuvable.'); e.status = 404; e.expose = true; throw e; }
+  res.json({ ok: true });
+}
+
 // ---- Réglages (bonus) ------------------------------------------------------
 
 const CLES_REGLAGES = ['nom', 'slogan', 'whatsapp'];
@@ -249,6 +257,6 @@ module.exports = {
   login, session, changerMotDePasse, reinitialiser,
   listeProduits, creerProduit, modifierProduit, basculerActif, supprimerProduit,
   televerserImage, retirerImage,
-  listeCommandes, detailCommande, marquerLivree,
+  listeCommandes, detailCommande, marquerLivree, supprimerCommande,
   lireReglages, ecrireReglages,
 };

@@ -91,6 +91,7 @@ app.delete('/api/admin/produits/:id/image', auth.protege, admin.retirerImage);
 app.get('/api/admin/commandes', auth.protege, admin.listeCommandes);
 app.get('/api/admin/commandes/:reference', auth.protege, admin.detailCommande);
 app.patch('/api/admin/commandes/:reference/livree', auth.protege, admin.marquerLivree);
+app.delete('/api/admin/commandes/:reference', auth.protege, admin.supprimerCommande);
 
 app.get('/api/admin/reglages', auth.protege, admin.lireReglages);
 app.put('/api/admin/reglages', auth.protege, admin.ecrireReglages);

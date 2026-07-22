@@ -728,6 +728,7 @@
      const waNum = waTel.startsWith('241')? waTel : ('241'+waTel.replace(/^0/,''));
      let boutons = `<a class="btn btn-ghost" style="flex:1;text-align:center;text-decoration:none" href="https://wa.me/${waNum}" target="_blank">💬 Écrire à la cliente</a>`;
      if(c.statut!=='livre') boutons += `<button class="btn btn-primary" style="flex:1" onclick="marquerLivree('${esc(c.reference)}')">Marquer « livré »</button>`;
+     boutons += `<button class="btn btn-danger" style="flex:none" onclick="supprimerCommande('${esc(c.reference)}')">Supprimer</button>`;
      foot.innerHTML = boutons;
      document.getElementById('ovC').classList.add('open'); document.getElementById('drC').classList.add('open');
    }catch(ex){ toast(ex.message, true); }
@@ -735,6 +736,11 @@
  function closeCommande(){ document.getElementById('ovC').classList.remove('open'); document.getElementById('drC').classList.remove('open'); }
  async function marquerLivree(ref){
    try{ await api('PATCH',`/api/admin/commandes/${encodeURIComponent(ref)}/livree`); toast('Commande marquée livrée.'); closeCommande(); await loadCommandes(); }
+   catch(ex){ toast(ex.message, true); }
+ }
+ async function supprimerCommande(ref){
+   if(!confirm('Supprimer définitivement cette commande ?')) return;
+   try{ await api('DELETE',`/api/admin/commandes/${encodeURIComponent(ref)}`); toast('Commande supprimée.'); closeCommande(); await loadCommandes(); }
    catch(ex){ toast(ex.message, true); }
  }
 
