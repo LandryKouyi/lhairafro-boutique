@@ -33,10 +33,12 @@
  /* Header */
  header.top{position:sticky;top:0;z-index:40;background:rgba(247,242,250,.82);backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
  .nav{display:flex;align-items:center;justify-content:space-between;gap:20px;padding:14px 24px;max-width:1120px;margin:0 auto}
- .brand{display:flex;align-items:baseline;gap:7px;font-size:1.05rem}
- .brand .b1{font-family:'Great Vibes',cursive;font-size:1.85rem;color:var(--violet);line-height:.7}
- .brand .b2{font-family:'Poppins',sans-serif;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--ink-strong);font-size:.98rem}
- .brand img.logo-img{height:48px;width:auto;display:block;mix-blend-mode:multiply}
+ .brand{display:flex;align-items:center;gap:13px;font-size:1.05rem}
+ .brand .wtxt{display:flex;flex-direction:column;line-height:1}
+ .brand .b1{font-family:'Great Vibes',cursive;font-size:2rem;color:var(--violet);line-height:.82}
+ .brand .b2{font-family:'Poppins',sans-serif;font-weight:600;letter-spacing:3px;text-transform:uppercase;color:var(--ink-strong);font-size:.82rem;margin-top:3px}
+ .brand img.logo-img{height:60px;width:auto;display:block}
+ @media(max-width:520px){.brand img.logo-img{height:50px} .brand .b1{font-size:1.7rem} .brand .b2{font-size:.72rem}}
  .menu{display:flex;align-items:center;gap:28px}
  .menu a{font-size:.9rem;font-weight:500;color:var(--ink);transition:color .15s}
  .menu a:hover{color:var(--violet)}
@@ -149,7 +151,7 @@
  footer.ft .wrap{display:flex;flex-wrap:wrap;gap:16px;justify-content:space-between;align-items:center}
  footer.ft .fbrand .b1{font-family:'Great Vibes',cursive;font-size:1.7rem;color:var(--violet)}
  footer.ft .fbrand .b2{font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--ink-strong);font-size:.9rem;margin-left:6px}
- footer.ft .fbrand img.logo-img{height:82px;width:auto;display:inline-block;mix-blend-mode:multiply}
+ footer.ft .fbrand img.logo-img{height:96px;width:auto;display:inline-block}
  footer.ft .socials{display:flex;gap:16px;font-size:.9rem}
  footer.ft small{color:var(--ink);font-size:.82rem}
 
@@ -174,7 +176,7 @@
 
  <header class="top">
    <div class="nav">
-     <a class="brand" href="/"><img class="logo-img" src="assets/logo-lhairafro.jpeg" alt="L'Hair Afro"></a>
+     <a class="brand" href="/"><img class="logo-img" src="assets/logo-lhairafro.png" alt="L'Hair Afro"><span class="wtxt"><span class="b1">L'Hair</span><span class="b2">Afro</span></span></a>
      <nav class="menu">
        <a class="lnk" href="#gamme">La gamme</a>
        <a class="lnk" href="#marque">La marque</a>
@@ -306,7 +308,7 @@
 
  <footer class="ft">
    <div class="wrap">
-     <div class="fbrand"><img class="logo-img" src="assets/logo-lhairafro.jpeg" alt="L'Hair Afro"></div>
+     <div class="fbrand"><img class="logo-img" src="assets/logo-lhairafro.png" alt="L'Hair Afro"></div>
      <div class="socials"><span>@lhairafro</span><a href="https://wa.me/24174598750" target="_blank" rel="noopener">WhatsApp</a></div>
      <small>© <span id="yr"></span> L'Hair Afro · The Afro beauty concept store · Libreville, Gabon</small>
    </div>

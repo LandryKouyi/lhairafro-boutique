@@ -37,7 +37,7 @@
    width:min(410px,100%);padding:34px 30px}
  .lbrand{font-weight:800;font-size:1.35rem;letter-spacing:.2px}
  .lbrand b{color:var(--accent)} .lbrand em{font-style:normal;color:var(--accent2)}
- .llogo{display:block;margin:0 auto 14px;height:108px;width:auto;mix-blend-mode:multiply}
+ .llogo{display:block;margin:0 auto 14px;height:124px;width:auto}
  .ltag{color:var(--muted);font-size:.9rem;margin:6px 0 22px}
  .ltag .dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--grad);margin-right:7px;vertical-align:middle}
  label{display:block;font-size:.8rem;font-weight:700;margin-bottom:6px}
@@ -75,7 +75,7 @@
  .top{position:sticky;top:0;z-index:30;background:rgba(255,255,255,.94);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
  .topin{max-width:1080px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:13px 20px}
  .brand{font-weight:800;font-size:1.1rem;display:flex;align-items:center;gap:10px} .brand b{color:var(--accent)} .brand em{font-style:normal;color:var(--accent2)}
- .brand .blogo{height:42px;width:auto;display:block;mix-blend-mode:multiply;flex-shrink:0} .brand .btxt{line-height:1.05}
+ .brand .blogo{height:52px;width:auto;display:block;flex-shrink:0} .brand .btxt{line-height:1.05}
  .brand small{display:block;font-size:.68rem;font-weight:600;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;margin-top:1px}
  .tabs{display:flex;gap:4px;max-width:1080px;margin:0 auto;padding:0 20px}
  .tab{background:none;border:none;cursor:pointer;padding:13px 14px;font-size:.94rem;font-weight:700;color:var(--muted);border-bottom:2.5px solid transparent;margin-bottom:-1px}
@@ -191,7 +191,7 @@
 <div class="login" id="loginView">
   <!-- Connexion -->
   <form class="lcard" id="loginForm" onsubmit="return doLogin(event)">
-    <img class="llogo" src="/assets/logo-lhairafro.jpeg" alt="L'Hair Afro">
+    <img class="llogo" src="/assets/logo-lhairafro.png" alt="L'Hair Afro">
     <div class="ltag" style="text-align:center"><span class="dot"></span>Espace de gestion · réservé à la gérante</div>
     <div class="field">
       <label for="pwd">Mot de passe</label>
@@ -229,7 +229,7 @@
 <div id="app" class="hidden">
   <header class="top">
     <div class="topin">
-      <div class="brand"><img class="blogo" src="/assets/logo-lhairafro.jpeg" alt="L'Hair Afro"><span class="btxt"><b>L'Hair</b> <em>Afro</em><small>Arrière-boutique</small></span></div>
+      <div class="brand"><img class="blogo" src="/assets/logo-lhairafro.png" alt="L'Hair Afro"><span class="btxt"><b>L'Hair</b> <em>Afro</em><small>Arrière-boutique</small></span></div>
       <div style="display:flex;gap:8px;align-items:center">
         <button class="btn btn-soft installable hidden" id="installBtn" onclick="installerApp()">📲 Installer l'appli</button>
         <button class="btn btn-ghost" onclick="logout()">Se déconnecter</button>
