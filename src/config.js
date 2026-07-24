@@ -37,6 +37,9 @@ const config = {
     sessionSecret: process.env.ADMIN_SESSION_SECRET || '',
     // Durée de validité d'une session admin (heures).
     sessionHeures: parseInt(process.env.ADMIN_SESSION_HEURES, 10) || 12,
+    // Domaine des adresses pro des administratrices secondaires créées par la
+    // super admin (ex. nicole@lhairafro.com). Sert à valider les adresses saisies.
+    emailDomain: (process.env.ADMIN_EMAIL_DOMAIN || 'lhairafro.com').toLowerCase(),
   },
 
   // URL publique du site (Render la fournit via RENDER_EXTERNAL_URL) — sert à

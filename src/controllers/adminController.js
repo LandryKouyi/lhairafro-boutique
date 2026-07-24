@@ -10,21 +10,58 @@ const uploads = require('../services/uploads');
 
 // ---- Connexion -------------------------------------------------------------
 
-// POST /api/admin/login  { motdepasse }
+// POST /api/admin/login  { motdepasse | code }
+// Connexion par CODE d'accès unique : le serveur reconnaît qui se connecte
+// (super admin OU l'une des administratrices secondaires) à partir du seul code.
 function login(req, res) {
   if (!auth.estActive()) {
     return res.status(503).json({ erreur: "L'espace de gestion n'est pas encore activé sur le serveur." });
   }
-  const saisi = (req.body && (req.body.motdepasse || req.body.password)) || '';
-  if (!auth.motDePasseValide(saisi)) {
-    return res.status(401).json({ erreur: 'Mot de passe incorrect.' });
+  const saisi = (req.body && (req.body.motdepasse || req.body.password || req.body.code)) || '';
+  const identite = auth.identifier(saisi);
+  if (!identite) {
+    return res.status(401).json({ erreur: 'Code d’accès incorrect.' });
   }
-  return res.json({ ok: true, jeton: auth.creerJeton(), expireHeures: config.admin.sessionHeures });
+  return res.json({ ok: true, jeton: auth.creerJeton(identite), role: identite.role, expireHeures: config.admin.sessionHeures });
 }
 
-// GET /api/admin/session — vérifie qu'un jeton est encore valide (appelée au chargement).
+// GET /api/admin/session — vérifie le jeton et renvoie l'identité courante.
 function session(req, res) {
-  res.json({ ok: true, motDePassePerso: auth.motDePassePersoDefini() });
+  res.json({
+    ok: true,
+    role: req.admin.role,
+    email: req.admin.email,
+    nom: req.admin.nom,
+    motDePassePerso: auth.motDePassePersoDefini(),
+    maxAdmins: auth.MAX_ADMINS,
+  });
+}
+
+// ---- Administratrices secondaires (SUPER ADMIN uniquement) -----------------
+
+// GET /api/admin/admins — liste des administratrices secondaires + limite.
+function listeAdmins(req, res) {
+  res.json({ admins: auth.listeAdmins(), max: auth.MAX_ADMINS });
+}
+
+// POST /api/admin/admins  { nom, email, code }
+function creerAdmin(req, res) {
+  const b = req.body || {};
+  const a = auth.creerAdmin({ email: b.email, nom: b.nom, code: b.code || b.motdepasse });
+  res.status(201).json({ ok: true, admin: { id: a.id, email: a.email, nom: a.nom, actif: a.actif, cree_le: a.cree_le } });
+}
+
+// PUT /api/admin/admins/:id  { nom?, code?, actif? } — renommer / réinitialiser le code / (dés)activer.
+function modifierAdmin(req, res) {
+  const b = req.body || {};
+  const a = auth.modifierAdmin(req.params.id, { nom: b.nom, code: b.code || b.motdepasse, actif: b.actif });
+  res.json({ ok: true, admin: { id: a.id, email: a.email, nom: a.nom, actif: a.actif } });
+}
+
+// DELETE /api/admin/admins/:id
+function supprimerAdmin(req, res) {
+  auth.supprimerAdmin(req.params.id);
+  res.json({ ok: true });
 }
 
 // POST /api/admin/changer-motdepasse  { actuel, nouveau } — Ludmilla définit / change
@@ -255,6 +292,7 @@ function ecrireReglages(req, res) {
 
 module.exports = {
   login, session, changerMotDePasse, reinitialiser,
+  listeAdmins, creerAdmin, modifierAdmin, supprimerAdmin,
   listeProduits, creerProduit, modifierProduit, basculerActif, supprimerProduit,
   televerserImage, retirerImage,
   listeCommandes, detailCommande, marquerLivree, supprimerCommande,

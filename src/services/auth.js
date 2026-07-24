@@ -113,49 +113,164 @@ function codeRecuperationValide(code) {
 const b64url = (buf) => buf.toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 const fromB64url = (s) => Buffer.from(String(s).replace(/-/g, '+').replace(/_/g, '/'), 'base64');
 
+// --- Rôles & administratrices secondaires -----------------------------------
+// La SUPER admin (Ludmilla) s'authentifie via admin_auth / le mot de passe
+// maître. Elle peut créer jusqu'à MAX_ADMINS administratrices secondaires
+// (rôle 'admin'), chacune avec une adresse pro @emailDomain et son propre code
+// d'accès. Identité super par défaut : l'adresse commune de la boutique.
+const MAX_ADMINS = 2;
+const SUPER_EMAIL = () => String(config.mail && config.mail.fromEmail || 'contact@lhairafro.com').toLowerCase();
+const SUPER_NOM = 'Ludmilla';
+
+function err(status, message) {
+  const e = new Error(message); e.status = status; e.expose = true; return e;
+}
+
+function adminParId(id) {
+  return db.prepare('SELECT * FROM admins WHERE id = ?').get(parseInt(id, 10));
+}
+function listeAdmins() {
+  return db.prepare('SELECT id, email, nom, actif, cree_le FROM admins ORDER BY id').all();
+}
+function nombreAdmins() {
+  return db.prepare('SELECT COUNT(*) AS n FROM admins').get().n;
+}
+
+function emailValide(email) {
+  const dom = config.admin.emailDomain.replace(/\./g, '\\.');
+  return new RegExp(`^[a-z0-9](?:[a-z0-9._+-]*[a-z0-9])?@${dom}$`, 'i').test(String(email || ''));
+}
+
+// Un code d'accès ne doit ni être trivial, ni entrer en collision avec le mot de
+// passe maître (qui donnerait un accès SUPER par erreur).
+function verifierCodeAcceptable(code) {
+  if (String(code).length < 6) throw err(400, "Le code d'accès doit contenir au moins 6 caractères.");
+  if (config.admin.password && String(code) === config.admin.password) {
+    throw err(400, 'Ce code est réservé. Choisissez-en un autre.');
+  }
+}
+
+// Crée une administratrice secondaire. { email, nom, code } -> ligne créée.
+function creerAdmin({ email, nom, code }) {
+  email = String(email || '').trim().toLowerCase();
+  nom = String(nom || '').trim();
+  code = String(code || '');
+  if (!emailValide(email)) throw err(400, `Adresse invalide : elle doit se terminer par @${config.admin.emailDomain}.`);
+  if (email === SUPER_EMAIL()) throw err(400, 'Cette adresse est réservée à la boutique.');
+  verifierCodeAcceptable(code);
+  if (nombreAdmins() >= MAX_ADMINS) throw err(400, `Limite atteinte : ${MAX_ADMINS} administratrices au maximum.`);
+  if (db.prepare('SELECT id FROM admins WHERE email = ?').get(email)) throw err(400, 'Une administratrice utilise déjà cette adresse.');
+  const info = db.prepare('INSERT INTO admins (email, nom, password_hash, actif) VALUES (?, ?, ?, 1)')
+    .run(email, nom, hacher(code));
+  return adminParId(info.lastInsertRowid);
+}
+
+// Modifie une admin secondaire : renommer, réinitialiser le code, (dés)activer.
+function modifierAdmin(id, { nom, code, actif }) {
+  const a = adminParId(id);
+  if (!a) throw err(404, 'Administratrice introuvable.');
+  if (nom !== undefined) db.prepare('UPDATE admins SET nom = ? WHERE id = ?').run(String(nom).trim(), a.id);
+  if (actif !== undefined) db.prepare('UPDATE admins SET actif = ? WHERE id = ?').run(actif ? 1 : 0, a.id);
+  if (code !== undefined && String(code) !== '') {
+    verifierCodeAcceptable(code);
+    db.prepare('UPDATE admins SET password_hash = ? WHERE id = ?').run(hacher(String(code)), a.id);
+  }
+  return adminParId(id);
+}
+
+function supprimerAdmin(id) {
+  const info = db.prepare('DELETE FROM admins WHERE id = ?').run(parseInt(id, 10));
+  if (!info.changes) throw err(404, 'Administratrice introuvable.');
+}
+
+// Reconnaît QUI se connecte à partir du seul code d'accès saisi.
+// Renvoie { role:'super'|'admin', adminId } ou null.
+function identifier(code) {
+  const saisi = String(code || '');
+  // Super : mot de passe perso de Ludmilla (prioritaire) OU mot de passe maître.
+  if (motDePasseValide(saisi)) return { role: 'super', adminId: 0 };
+  // Admins secondaires actives.
+  const subs = db.prepare('SELECT id, password_hash FROM admins WHERE actif = 1').all();
+  for (const s of subs) {
+    if (verifierHash(saisi, s.password_hash)) return { role: 'admin', adminId: s.id };
+  }
+  return null;
+}
+
 // Fabrique un jeton de session valable config.admin.sessionHeures heures.
-function creerJeton() {
+// identity = { role, adminId } (défaut : super). Le rôle et l'id sont EMBARQUÉS
+// dans le jeton ; la clé de signature reste dérivée du mot de passe maître.
+function creerJeton(identity) {
   const cle = cleSignature();
   if (!cle) return null;
+  const role = identity && identity.role === 'admin' ? 'admin' : 'super';
+  const a = (identity && identity.adminId) ? identity.adminId : 0;
   const exp = Date.now() + config.admin.sessionHeures * 3600 * 1000;
-  const payload = b64url(Buffer.from(JSON.stringify({ r: 'admin', exp })));
+  const payload = b64url(Buffer.from(JSON.stringify({ r: role, a, exp })));
   const sig = b64url(crypto.createHmac('sha256', cle).update(payload).digest());
   return `${payload}.${sig}`;
 }
 
-// Vérifie un jeton : signature valide + non expiré. Renvoie true/false.
-function jetonValide(jeton) {
+// Lit un jeton : signature valide + non expiré. Renvoie { r, a } ou null.
+function lireJeton(jeton) {
   const cle = cleSignature();
-  if (!cle || !jeton || typeof jeton !== 'string') return false;
+  if (!cle || !jeton || typeof jeton !== 'string') return null;
   const [payload, sig] = jeton.split('.');
-  if (!payload || !sig) return false;
+  if (!payload || !sig) return null;
   const attendu = crypto.createHmac('sha256', cle).update(payload).digest();
   const recu = fromB64url(sig);
-  if (recu.length !== attendu.length || !crypto.timingSafeEqual(recu, attendu)) return false;
+  if (recu.length !== attendu.length || !crypto.timingSafeEqual(recu, attendu)) return null;
   try {
-    const data = JSON.parse(fromB64url(payload).toString('utf8'));
-    return data.r === 'admin' && typeof data.exp === 'number' && data.exp > Date.now();
+    const d = JSON.parse(fromB64url(payload).toString('utf8'));
+    if ((d.r === 'super' || d.r === 'admin') && typeof d.exp === 'number' && d.exp > Date.now()) {
+      return { r: d.r, a: d.a || 0 };
+    }
+    return null;
   } catch {
-    return false;
+    return null;
   }
 }
 
+function jetonValide(jeton) { return lireJeton(jeton) !== null; }
+
 // Middleware Express : protège les routes /api/admin/*. Lit le jeton dans
-// l'en-tête « Authorization: Bearer <jeton> ».
+// l'en-tête « Authorization: Bearer <jeton> » et attache req.admin
+// = { role, adminId, email, nom }.
 function protege(req, res, next) {
   if (!estActive()) {
     return res.status(503).json({ erreur: "L'espace de gestion n'est pas encore activé. Le mot de passe admin doit être défini sur le serveur." });
   }
   const h = req.headers.authorization || '';
   const jeton = h.startsWith('Bearer ') ? h.slice(7).trim() : '';
-  if (!jetonValide(jeton)) {
+  const p = lireJeton(jeton);
+  if (!p) {
     return res.status(401).json({ erreur: 'Session expirée ou invalide. Reconnectez-vous.' });
+  }
+  if (p.r === 'super') {
+    req.admin = { role: 'super', adminId: 0, email: SUPER_EMAIL(), nom: SUPER_NOM };
+    return next();
+  }
+  // Admin secondaire : doit toujours exister ET être active (révocation immédiate).
+  const a = adminParId(p.a);
+  if (!a || !a.actif) {
+    return res.status(401).json({ erreur: 'Votre accès a été modifié. Reconnectez-vous.' });
+  }
+  req.admin = { role: 'admin', adminId: a.id, email: String(a.email).toLowerCase(), nom: a.nom };
+  next();
+}
+
+// Middleware Express : réserve une route à la super admin.
+function superSeul(req, res, next) {
+  if (!req.admin || req.admin.role !== 'super') {
+    return res.status(403).json({ erreur: 'Action réservée à la super administratrice.' });
   }
   next();
 }
 
 module.exports = {
   estActive, motDePasseValide, motDePasseMaitreValide, motDePassePersoDefini,
-  creerJeton, jetonValide, protege,
+  creerJeton, jetonValide, lireJeton, protege, superSeul,
   definirMotDePasse, codeRecuperationValide,
+  MAX_ADMINS, identifier, listeAdmins, adminParId, nombreAdmins,
+  creerAdmin, modifierAdmin, supprimerAdmin,
 };

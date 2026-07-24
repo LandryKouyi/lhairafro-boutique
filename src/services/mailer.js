@@ -61,7 +61,12 @@ function texteVersHtml(texte) {
 //   texte   : corps en texte brut (obligatoire)
 //   html    : corps HTML (facultatif ; dérivé du texte sinon)
 //   replyTo : adresse de réponse (facultatif)
-async function envoyer({ dest, sujet, texte, html, replyTo }) {
+//   from    : expéditeur { name, address } (facultatif ; l'adresse pro de
+//             l'administratrice connectée). Défaut : l'adresse commune de la
+//             boutique. ⚠️ Gmail n'accepte cet expéditeur que si l'adresse a été
+//             validée comme « Envoyer en tant que » dans le compte relais ; sinon
+//             il la réécrit vers l'adresse du compte.
+async function envoyer({ dest, sujet, texte, html, replyTo, from }) {
   if (!estConfigure()) {
     const e = new Error("Messagerie non activée : le compte Gmail d'envoi n'est pas encore configuré sur le serveur.");
     e.status = 503; e.expose = true; throw e;
@@ -75,10 +80,14 @@ async function envoyer({ dest, sujet, texte, html, replyTo }) {
     const e = new Error('Le message est vide.'); e.status = 400; e.expose = true; throw e;
   }
 
-  // From : l'alias « Envoyer en tant que » (contact@lhairafro.com). Gmail
-  // n'autorise cet expéditeur que si l'alias a bien été validé dans le compte.
+  // From : l'alias « Envoyer en tant que » de l'administratrice connectée (ou
+  // l'adresse commune par défaut). Gmail n'autorise cet expéditeur que si l'alias
+  // a bien été validé dans le compte relais.
+  const exp = (from && from.address)
+    ? { name: from.name || cfg().fromName, address: String(from.address).trim() }
+    : { name: cfg().fromName, address: cfg().fromEmail };
   const message = {
-    from: { name: cfg().fromName, address: cfg().fromEmail },
+    from: exp,
     to: adresse,
     subject: String(sujet || '(sans objet)').slice(0, 250),
     text: corpsTexte || undefined,

@@ -73,6 +73,21 @@ db.exec(`
     maj_le        TEXT
   );
 
+  -- Administratrices SECONDAIRES, créées par la super admin (Ludmilla), 2 au
+  -- maximum. La super admin, elle, s'authentifie via admin_auth ci-dessus (ou le
+  -- mot de passe maître ADMIN_PASSWORD). Chaque admin secondaire a une adresse
+  -- pro @lhairafro.com (identité d'envoi + filtrage de SA messagerie) et son
+  -- propre code d'accès (password_hash). Rôle applicatif 'admin' : elles NE
+  -- peuvent NI accéder à l'espace mot de passe / MyPVit, NI créer d'autres admins.
+  CREATE TABLE IF NOT EXISTS admins (
+    id            INTEGER PRIMARY KEY AUTOINCREMENT,
+    email         TEXT    NOT NULL UNIQUE,      -- ex. nicole@lhairafro.com (minuscules)
+    nom           TEXT    NOT NULL DEFAULT '',
+    password_hash TEXT    NOT NULL,             -- code d'accès haché (scrypt)
+    actif         INTEGER NOT NULL DEFAULT 1,
+    cree_le       TEXT    NOT NULL DEFAULT (datetime('now'))
+  );
+
   -- Messagerie de l'arrière-boutique (boîte de contact@lhairafro.com).
   -- Réception : POST /api/mail-inbound (Cloudflare Email Worker) -> direction 'in'.
   -- Envoi     : via SMTP Gmail (compte relais) depuis l'admin -> direction 'out'.

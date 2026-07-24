@@ -17,15 +17,37 @@ function apercu(row) {
   return t.slice(0, 140);
 }
 
+// Adresse de filtrage : les administratrices secondaires ne voient QUE leur
+// propre courrier (reçu sur leur adresse pro / envoyé depuis celle-ci). La super
+// admin (Ludmilla) voit TOUT -> null (aucun filtre).
+function emailFiltre(req) {
+  return (req.admin && req.admin.role === 'admin') ? String(req.admin.email).toLowerCase() : null;
+}
+
+// Un message appartient-il à cette administratrice ? (contrôle d'accès unitaire)
+function messageAutorise(req, row) {
+  const email = emailFiltre(req);
+  if (!email || !row) return true; // super : tout ; row null géré ailleurs
+  if (row.direction === 'in') return String(row.a_email || '').toLowerCase() === email;
+  return String(row.de_email || '').toLowerCase() === email; // 'out'
+}
+
 // ---- Admin : état de la messagerie ----------------------------------------
 // GET /api/admin/messagerie/etat -> de quoi afficher le bon état côté front.
 function etat(req, res) {
-  const nonLus = db.prepare("SELECT COUNT(*) AS n FROM messages WHERE direction='in' AND lu=0").get().n;
-  const total = db.prepare('SELECT COUNT(*) AS n FROM messages').get().n;
+  const email = emailFiltre(req);
+  let nonLus, total;
+  if (email) {
+    nonLus = db.prepare("SELECT COUNT(*) AS n FROM messages WHERE direction='in' AND lu=0 AND lower(a_email)=?").get(email).n;
+    total = db.prepare("SELECT COUNT(*) AS n FROM messages WHERE (direction='in' AND lower(a_email)=?) OR (direction='out' AND lower(de_email)=?)").get(email, email).n;
+  } else {
+    nonLus = db.prepare("SELECT COUNT(*) AS n FROM messages WHERE direction='in' AND lu=0").get().n;
+    total = db.prepare('SELECT COUNT(*) AS n FROM messages').get().n;
+  }
   res.json({
     envoiActif: mailer.estConfigure(),
     receptionActive: Boolean(config.mail.inboundToken),
-    from: config.mail.fromEmail,
+    from: (req.admin && req.admin.email) || config.mail.fromEmail,
     nonLus,
     total,
   });
@@ -35,17 +57,28 @@ function etat(req, res) {
 // GET /api/admin/messages?dossier=in|out|tous
 function liste(req, res) {
   const dossier = String(req.query.dossier || 'tous');
-  let rows;
-  if (dossier === 'in' || dossier === 'out') {
-    rows = db.prepare(`SELECT ${CHAMPS_LISTE}, corps_texte FROM messages WHERE direction = ? ORDER BY id DESC`).all(dossier);
-  } else {
-    rows = db.prepare(`SELECT ${CHAMPS_LISTE}, corps_texte FROM messages ORDER BY id DESC`).all();
+  const email = emailFiltre(req);
+  const cond = [];
+  const args = [];
+  if (dossier === 'in') {
+    cond.push("direction='in'");
+    if (email) { cond.push('lower(a_email)=?'); args.push(email); }
+  } else if (dossier === 'out') {
+    cond.push("direction='out'");
+    if (email) { cond.push('lower(de_email)=?'); args.push(email); }
+  } else if (email) {
+    cond.push("((direction='in' AND lower(a_email)=?) OR (direction='out' AND lower(de_email)=?))");
+    args.push(email, email);
   }
+  const where = cond.length ? `WHERE ${cond.join(' AND ')}` : '';
+  const rows = db.prepare(`SELECT ${CHAMPS_LISTE}, corps_texte FROM messages ${where} ORDER BY id DESC`).all(...args);
   const messages = rows.map((r) => ({
     id: r.id, direction: r.direction, de_email: r.de_email, de_nom: r.de_nom,
     a_email: r.a_email, sujet: r.sujet, lu: r.lu, cree_le: r.cree_le, apercu: apercu(r),
   }));
-  const nonLus = db.prepare("SELECT COUNT(*) AS n FROM messages WHERE direction='in' AND lu=0").get().n;
+  const nonLus = email
+    ? db.prepare("SELECT COUNT(*) AS n FROM messages WHERE direction='in' AND lu=0 AND lower(a_email)=?").get(email).n
+    : db.prepare("SELECT COUNT(*) AS n FROM messages WHERE direction='in' AND lu=0").get().n;
   res.json({ messages, nonLus, envoiActif: mailer.estConfigure() });
 }
 
@@ -54,7 +87,7 @@ function liste(req, res) {
 function detail(req, res) {
   const id = parseInt(req.params.id, 10);
   const row = db.prepare('SELECT * FROM messages WHERE id = ?').get(id);
-  if (!row) { const e = new Error('Message introuvable.'); e.status = 404; e.expose = true; throw e; }
+  if (!row || !messageAutorise(req, row)) { const e = new Error('Message introuvable.'); e.status = 404; e.expose = true; throw e; }
   if (row.direction === 'in' && !row.lu) {
     db.prepare('UPDATE messages SET lu = 1 WHERE id = ?').run(id);
     row.lu = 1;
@@ -80,12 +113,17 @@ async function envoyer(req, res, next) {
       if (src) inReplyTo = src.message_id || '';
     }
 
-    const { messageId } = await mailer.envoyer({ dest, sujet, texte });
+    // Expéditeur = l'adresse pro de l'administratrice connectée (super = adresse
+    // commune de la boutique). Enregistré tel quel dans « de_email » pour que sa
+    // messagerie retrouve ses propres envois.
+    const deEmail = (req.admin && req.admin.email) || config.mail.fromEmail;
+    const deNom = (req.admin && req.admin.nom) || config.mail.fromName;
+    const { messageId } = await mailer.envoyer({ dest, sujet, texte, from: { name: deNom, address: deEmail } });
 
     db.prepare(
       `INSERT INTO messages (direction, de_email, de_nom, a_email, sujet, corps_texte, message_id, in_reply_to, lu)
        VALUES ('out', ?, ?, ?, ?, ?, ?, ?, 1)`
-    ).run(config.mail.fromEmail, config.mail.fromName, dest, sujet, texte, messageId, inReplyTo);
+    ).run(deEmail, deNom, dest, sujet, texte, messageId, inReplyTo);
 
     res.status(201).json({ ok: true, messageId });
   } catch (e) {
@@ -97,8 +135,8 @@ async function envoyer(req, res, next) {
 // PATCH /api/admin/messages/:id/lu  { lu:true|false }
 function marquerLu(req, res) {
   const id = parseInt(req.params.id, 10);
-  const row = db.prepare('SELECT id FROM messages WHERE id = ?').get(id);
-  if (!row) { const e = new Error('Message introuvable.'); e.status = 404; e.expose = true; throw e; }
+  const row = db.prepare('SELECT id, direction, a_email, de_email FROM messages WHERE id = ?').get(id);
+  if (!row || !messageAutorise(req, row)) { const e = new Error('Message introuvable.'); e.status = 404; e.expose = true; throw e; }
   const lu = (req.body && req.body.lu === false) ? 0 : 1;
   db.prepare('UPDATE messages SET lu = ? WHERE id = ?').run(lu, id);
   res.json({ ok: true, lu });
@@ -108,8 +146,9 @@ function marquerLu(req, res) {
 // DELETE /api/admin/messages/:id
 function supprimer(req, res) {
   const id = parseInt(req.params.id, 10);
-  const info = db.prepare('DELETE FROM messages WHERE id = ?').run(id);
-  if (!info.changes) { const e = new Error('Message introuvable.'); e.status = 404; e.expose = true; throw e; }
+  const row = db.prepare('SELECT id, direction, a_email, de_email FROM messages WHERE id = ?').get(id);
+  if (!row || !messageAutorise(req, row)) { const e = new Error('Message introuvable.'); e.status = 404; e.expose = true; throw e; }
+  db.prepare('DELETE FROM messages WHERE id = ?').run(id);
   res.json({ ok: true });
 }
 

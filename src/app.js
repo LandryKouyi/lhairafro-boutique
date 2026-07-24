@@ -76,9 +76,16 @@ app.get('/api/commandes/:reference/statut', commande.statutCommande);
 // --- API arrière-boutique (espace de gestion de Ludmilla) -------------------
 // La connexion est publique ; tout le reste est protégé par auth.protege.
 app.post('/api/admin/login', admin.login);
-app.post('/api/admin/reinitialiser', admin.reinitialiser); // PUBLIC : reset par code de récupération
+app.post('/api/admin/reinitialiser', admin.reinitialiser); // PUBLIC : reset par code de récupération (super admin)
 app.get('/api/admin/session', auth.protege, admin.session);
-app.post('/api/admin/changer-motdepasse', auth.protege, admin.changerMotDePasse);
+// Espace mot de passe + code de récupération : RÉSERVÉ à la super admin.
+app.post('/api/admin/changer-motdepasse', auth.protege, auth.superSeul, admin.changerMotDePasse);
+
+// Gestion des administratrices secondaires : RÉSERVÉ à la super admin.
+app.get('/api/admin/admins', auth.protege, auth.superSeul, admin.listeAdmins);
+app.post('/api/admin/admins', auth.protege, auth.superSeul, admin.creerAdmin);
+app.put('/api/admin/admins/:id', auth.protege, auth.superSeul, admin.modifierAdmin);
+app.delete('/api/admin/admins/:id', auth.protege, auth.superSeul, admin.supprimerAdmin);
 
 app.get('/api/admin/produits', auth.protege, admin.listeProduits);
 app.post('/api/admin/produits', auth.protege, admin.creerProduit);

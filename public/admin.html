@@ -70,6 +70,22 @@
  .seccard{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px;margin-top:6px}
  .seccard h3{font-size:1.02rem;margin-bottom:4px}
  .seccard .hint{color:var(--muted);font-size:.85rem;margin-bottom:14px}
+ /* ---- Gestion des administratrices ---- */
+ .adminlist{display:flex;flex-direction:column;gap:9px;margin-bottom:14px}
+ .admins-empty{color:var(--muted);font-size:.85rem;padding:4px 0}
+ .adrow{display:flex;align-items:center;gap:10px;border:1px solid var(--line);border-radius:12px;padding:10px 12px;background:#fff}
+ .adrow.off{opacity:.55}
+ .adav{width:34px;height:34px;border-radius:50%;flex-shrink:0;display:grid;place-items:center;font-weight:800;color:#fff;background:var(--accent)}
+ .adinfo{flex:1;min-width:0}
+ .adinfo .adnom{font-weight:700;font-size:.92rem}
+ .adinfo .admail{color:var(--muted);font-size:.8rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+ .adbadge{font-size:.66rem;font-weight:800;text-transform:uppercase;letter-spacing:.04em;padding:2px 7px;border-radius:20px;background:rgba(95,99,104,.14);color:#5F6368}
+ .adacts{display:flex;gap:5px;flex-shrink:0}
+ .adacts .btn{padding:6px 9px;font-size:.76rem}
+ .ad-sep{font-weight:800;font-size:.8rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin:6px 0 10px;padding-top:12px;border-top:1px dashed var(--line)}
+ .emailrow{display:flex;align-items:stretch}
+ .emailrow .inp{border-top-right-radius:0;border-bottom-right-radius:0;text-align:right}
+ .emsuffix{display:flex;align-items:center;padding:0 11px;background:rgba(95,99,104,.10);border:1px solid var(--line);border-left:none;border-top-right-radius:12px;border-bottom-right-radius:12px;font-size:.85rem;font-weight:700;color:var(--muted);white-space:nowrap}
 
  /* ---- App shell ---- */
  .top{position:sticky;top:0;z-index:30;background:rgba(255,255,255,.94);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
@@ -79,6 +95,7 @@
  .brand em{font-family:'Fredoka',sans-serif;font-style:normal;font-weight:500;font-size:1.12rem;letter-spacing:.3px;color:var(--ink);margin-left:5px}
  .brand .blogo{height:52px;width:auto;display:block;flex-shrink:0} .brand .btxt{line-height:1.15}
  .brand small{display:block;font-size:.68rem;font-weight:600;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;margin-top:1px}
+ .whoami{font-size:.78rem;font-weight:700;color:var(--muted);max-width:210px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
  .tabs{display:flex;gap:4px;max-width:1080px;margin:0 auto;padding:0 20px}
  .tab{background:none;border:none;cursor:pointer;padding:13px 14px;font-size:.94rem;font-weight:700;color:var(--muted);border-bottom:2.5px solid transparent;margin-bottom:-1px}
  .tab.on{color:var(--accent);border-color:var(--accent)}
@@ -194,9 +211,9 @@
   <!-- Connexion -->
   <form class="lcard" id="loginForm" onsubmit="return doLogin(event)">
     <img class="llogo" src="/assets/logo-lhairafro.png" alt="L'Hair Afro">
-    <div class="ltag" style="text-align:center"><span class="dot"></span>Espace de gestion · réservé à la gérante</div>
+    <div class="ltag" style="text-align:center"><span class="dot"></span>Espace de gestion · L'Hair Afro</div>
     <div class="field">
-      <label for="pwd">Mot de passe</label>
+      <label for="pwd">Code d'accès</label>
       <input class="inp" type="password" id="pwd" autocomplete="current-password" placeholder="••••••••" autofocus>
     </div>
     <button class="btn btn-primary btn-block" id="loginBtn" type="submit">Se connecter</button>
@@ -233,6 +250,7 @@
     <div class="topin">
       <div class="brand"><img class="blogo" src="/assets/logo-lhairafro.png" alt="L'Hair Afro"><span class="btxt"><b>L'Hair</b> <em>Afro</em><small>Arrière-boutique</small></span></div>
       <div style="display:flex;gap:8px;align-items:center">
+        <span id="whoami" class="whoami hidden"></span>
         <button class="btn btn-soft installable hidden" id="installBtn" onclick="installerApp()">📲 Installer l'appli</button>
         <button class="btn btn-ghost" onclick="logout()">Se déconnecter</button>
       </div>
@@ -294,7 +312,7 @@
       <div class="field"><label>Numéro WhatsApp (format international, ex. 24174598750)</label><input class="inp" id="r_whatsapp" inputmode="numeric"></div>
       <button class="btn btn-primary" id="rbtn" onclick="saveReglages()">Enregistrer</button>
 
-      <div class="seccard" style="margin-top:28px">
+      <div class="seccard" id="cardMdp" style="margin-top:28px">
         <h3>🔒 Mon mot de passe</h3>
         <div class="hint" id="secHint">Définissez un mot de passe que vous seule connaissez.</div>
         <div class="field"><label>Mot de passe actuel</label><input class="inp" type="password" id="s_actuel" autocomplete="current-password" placeholder="Votre mot de passe actuel"></div>
@@ -305,10 +323,28 @@
         <button class="btn btn-primary" id="sbtn" onclick="changerMotDePasse()">Mettre à jour mon mot de passe</button>
       </div>
 
-      <div class="seccard" style="margin-top:22px">
+      <div class="seccard" id="cardPvit" style="margin-top:22px">
         <h3>💰 Mon argent — MyPVit</h3>
         <div class="hint">Consultez vos encaissements Mobile Money (Airtel & Moov) et gérez vos retraits d'argent sur votre tableau de bord MyPVit.</div>
         <a class="btn btn-primary" href="https://mypvit.pro/dashboard" target="_blank" rel="noopener" style="text-decoration:none;display:inline-block">Ouvrir mon tableau de bord MyPVit ↗</a>
+      </div>
+
+      <!-- Gestion des administratrices — SUPER ADMIN uniquement -->
+      <div class="seccard" id="cardAdmins" style="margin-top:22px">
+        <h3>👥 Administratrices</h3>
+        <div class="hint">Vous pouvez créer jusqu'à <b id="adMax">2</b> administratrices. Elles gèrent les produits, les commandes et <b>leur</b> messagerie, mais ne peuvent ni changer les mots de passe, ni voir vos encaissements, ni créer d'autres administratrices.</div>
+        <div id="adminsList" class="adminlist"><div class="admins-empty">Chargement…</div></div>
+        <div id="adminAdd">
+          <div class="ad-sep">Ajouter une administratrice</div>
+          <div class="two">
+            <div class="field"><label>Son nom</label><input class="inp" id="a_nom" placeholder="ex. Nicole" autocomplete="off"></div>
+            <div class="field"><label>Son adresse pro</label>
+              <div class="emailrow"><input class="inp" id="a_local" placeholder="nicole" autocomplete="off" oninput="this.value=this.value.toLowerCase().replace(/[^a-z0-9._+-]/g,'')"><span class="emsuffix">@lhairafro.com</span></div>
+            </div>
+          </div>
+          <div class="field"><label>Son code d'accès (au moins 6 caractères)</label><input class="inp" id="a_code" placeholder="le code qu'elle utilisera pour se connecter" autocomplete="off"></div>
+          <button class="btn btn-primary" id="aAddBtn" onclick="ajouterAdmin()">+ Créer cette administratrice</button>
+        </div>
       </div>
     </div>
   </main>
@@ -522,13 +558,89 @@
    const sw=document.getElementById('pSwatches'); sw.innerHTML='';
    SWATCHES.forEach(c=>{ const b=document.createElement('button'); b.type='button'; b.className='sw'; b.style.background=c;
      b.onclick=()=>{ document.getElementById('p_couleur').value=c; [...sw.children].forEach(x=>x.classList.remove('on')); b.classList.add('on'); syncPreview(); }; sw.appendChild(b); });
-   // État sécurité : mot de passe perso déjà défini ?
+   // Identité + rôle de la personne connectée (super admin ou admin secondaire).
    try{ const s = await api('GET','/api/admin/session');
+     appliquerRole(s);
      document.getElementById('secHint').textContent = s.motDePassePerso
        ? 'Mot de passe personnel actif. Vous seule le connaissez.'
        : 'Vous utilisez le mot de passe fourni. Définissez le vôtre : vous seule le connaîtrez.';
    }catch{}
    await Promise.all([loadProduits(), loadCommandes(), loadReglages(), rafraichirBadgeMail()]);
+ }
+
+ /* ---------- Rôle & identité ---------- */
+ let ROLE = 'super';        // 'super' | 'admin'
+ let MOI  = { email:'', nom:'' };
+ function appliquerRole(s){
+   ROLE = s.role || 'super';
+   MOI  = { email: s.email || '', nom: s.nom || '' };
+   const sup = ROLE === 'super';
+   if(s.maxAdmins) document.getElementById('adMax').textContent = s.maxAdmins;
+   // Espaces réservés à la super admin : mot de passe, MyPVit, gestion des admins.
+   ['cardMdp','cardPvit','cardAdmins'].forEach(id=>{ const el=document.getElementById(id); if(el) el.classList.toggle('hidden', !sup); });
+   // Bandeau « qui suis-je » dans l'en-tête.
+   const who=document.getElementById('whoami');
+   if(who){ who.textContent = (MOI.nom? MOI.nom+' · ':'') + (MOI.email||''); who.classList.toggle('hidden', !MOI.email); }
+   if(sup) chargerAdmins();
+ }
+
+ /* ---------- Administratrices (super admin) ---------- */
+ function initialeDe(s){ return (String(s||'?').trim()[0]||'?').toUpperCase(); }
+ async function chargerAdmins(){
+   const box=document.getElementById('adminsList');
+   try{
+     const d=await api('GET','/api/admin/admins');
+     const admins=d.admins||[];
+     const plein = admins.length >= (d.max||2);
+     document.getElementById('adminAdd').classList.toggle('hidden', plein);
+     if(!admins.length){ box.innerHTML='<div class="admins-empty">Aucune administratrice pour l’instant. Ajoutez-en une ci-dessous.</div>'; return; }
+     box.innerHTML = admins.map(a=>`
+       <div class="adrow ${a.actif?'':'off'}">
+         <div class="adav">${esc(initialeDe(a.nom||a.email))}</div>
+         <div class="adinfo">
+           <div class="adnom">${esc(a.nom||'(sans nom)')} ${a.actif?'':'<span class="adbadge">désactivée</span>'}</div>
+           <div class="admail">${esc(a.email)}</div>
+         </div>
+         <div class="adacts">
+           <button class="btn btn-ghost" onclick="resetAdmin(${a.id})" title="Changer son code">🔑</button>
+           <button class="btn btn-ghost" onclick="basculerAdmin(${a.id}, ${a.actif?0:1})" title="${a.actif?'Désactiver':'Réactiver'}">${a.actif?'⏸️':'▶️'}</button>
+           <button class="btn btn-danger" onclick="retirerAdmin(${a.id}, '${esc(a.nom||a.email)}')" title="Supprimer">🗑️</button>
+         </div>
+       </div>`).join('');
+   }catch(ex){ box.innerHTML=`<div class="admins-empty">${esc(ex.message)}</div>`; }
+ }
+ async function ajouterAdmin(){
+   const nom=document.getElementById('a_nom').value.trim();
+   const local=document.getElementById('a_local').value.trim().toLowerCase();
+   const code=document.getElementById('a_code').value;
+   if(!nom){ toast('Indiquez son nom.', true); return; }
+   if(!local){ toast('Indiquez le début de son adresse (avant @).', true); return; }
+   if(code.length<6){ toast('Le code d’accès doit faire au moins 6 caractères.', true); return; }
+   const email = local + '@lhairafro.com';
+   const btn=document.getElementById('aAddBtn'); btn.disabled=true; btn.innerHTML='<span class="spin"></span>';
+   try{
+     await api('POST','/api/admin/admins', { nom, email, code });
+     document.getElementById('a_nom').value=''; document.getElementById('a_local').value=''; document.getElementById('a_code').value='';
+     toast('Administratrice créée. Communiquez-lui son adresse et son code.');
+     chargerAdmins();
+   }catch(ex){ toast(ex.message, true); }
+   finally{ btn.disabled=false; btn.textContent='+ Créer cette administratrice'; }
+ }
+ async function resetAdmin(id){
+   const code=prompt('Nouveau code d’accès (au moins 6 caractères) :');
+   if(code===null) return;
+   if(code.length<6){ toast('Le code doit faire au moins 6 caractères.', true); return; }
+   try{ await api('PUT','/api/admin/admins/'+id, { code }); toast('Nouveau code enregistré. Communiquez-le-lui.'); }
+   catch(ex){ toast(ex.message, true); }
+ }
+ async function basculerAdmin(id, actif){
+   try{ await api('PUT','/api/admin/admins/'+id, { actif: !!actif }); toast(actif?'Administratrice réactivée.':'Administratrice désactivée.'); chargerAdmins(); }
+   catch(ex){ toast(ex.message, true); }
+ }
+ async function retirerAdmin(id, nom){
+   if(!confirm('Supprimer '+nom+' ? Elle ne pourra plus se connecter.')) return;
+   try{ await api('DELETE','/api/admin/admins/'+id); toast('Administratrice supprimée.'); chargerAdmins(); }
+   catch(ex){ toast(ex.message, true); }
  }
 
  /* rafraîchit le badge « non lus » de l'onglet Messagerie (léger, appelé au démarrage) */
