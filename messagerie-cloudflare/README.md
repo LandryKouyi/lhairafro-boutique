@@ -56,7 +56,8 @@ npm install
 npx wrangler login
 npx wrangler deploy
 # puis poser les 3 variables (secrets) :
-npx wrangler secret put FORWARD_TO      # -> chrysoslandry@gmail.com
+npx wrangler secret put FORWARD_TO      # -> lhairafro26@gmail.com (avant : chrysoslandry@gmail.com, changé le 2026-07-24)
+npx wrangler secret put OTP_FORWARD_TO  # -> chrysoslandry@gmail.com (copie des SEULS e-mails PVit @mypvit.pro ; doit être une destination vérifiée ; vide = off)
 npx wrangler secret put INBOUND_URL     # -> https://lhairafro.com/api/mail-inbound
 npx wrangler secret put INBOUND_TOKEN   # -> LA MÊME valeur que MAIL_INBOUND_TOKEN
 ```
